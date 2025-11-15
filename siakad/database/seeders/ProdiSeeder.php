@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ProdiSeeder extends Seeder
 {
@@ -12,6 +12,19 @@ class ProdiSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        DB::table('prodi')->insert([
+            [
+                'id_prodi' => 1,
+                'nama_prodi' => 'Teknologi Rekayasa Perangkat Lunak'
+            ],
+            [
+                'id_prodi' => 2,
+                'nama_prodi' => 'Teknologi Rekayasa Komputer'
+            ],
+            [
+                'id_prodi' => 3,
+                'nama_prodi' => 'Bisnis Digital'
+            ],
+        ]);
     }
 }
