@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_jadwal')->nullable();
             $table->string('semester', 45)->nullable();
             $table->string('tahun_ajaran', 45)->nullable();
-            $table->enum('status_validasi', ['Menunggu', 'Disetujui', 'Ditolak'])->default('Menunggu');
+            $table->string('status', 20)->nullable()->comment('Contoh: aktif, drop, selesai');
             $table->foreign('nim')->references('nim')->on('mahasiswa')->onDelete('no action')->onUpdate('no action');
             $table->foreign('id_jadwal')->references('id_jadwal')->on('jadwal')->onDelete('no action')->onUpdate('no action');
         });

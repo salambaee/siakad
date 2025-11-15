@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_jadwal');
             $table->string('kode_mk', 10)->nullable();
             $table->bigInteger('nidn')->nullable();
-            $table->enum('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'])->nullable();
+            $table->string('hari')->nullable();
             $table->string('jam', 20)->nullable()->comment('Contoh: 08:00 - 10:30');
             $table->string('ruang', 20)->nullable();
             $table->foreign('kode_mk')->references('kode_mk')->on('mata_kuliah')->onDelete('no action')->onUpdate('no action');
