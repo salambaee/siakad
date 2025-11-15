@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('dosen', function (Blueprint $table) {
             $table->bigInteger('nidn')->primary();
             $table->string('nama', 45)->nullable();
+            $table->foreignId('id_prodi')->nullable()->constrained('prodi', 'id_prodi')->onDelete('no action')->onUpdate('no action');
             $table->string('keahlian', 45)->nullable();
             $table->string('password', 255)->nullable();
             $table->string('peran', 45)->nullable();
+            $table->timestamps();
         });
     }
 
