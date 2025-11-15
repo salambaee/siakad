@@ -4,42 +4,68 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
+use App\Models\Prodi;
 use Illuminate\Http\Request;
 
 class MahasiswaController extends Controller
 {
     public function index()
     {
-        $data = Mahasiswa::all();
-        return view('admin.mahasiswa.index', compact('data'));
+        $mahasiswa = Mahasiswa::with('prodi')->get();
+        return view('admin.mahasiswa.index', compact('mahasiswa'));
     }
 
     public function create()
     {
-        return view('admin.mahasiswa.create');
+        $prodi = Prodi::all();
+        return view('admin.mahasiswa.create', compact('prodi'));
     }
 
     public function store(Request $request)
     {
-        Mahasiswa::create($request->all());
-        return redirect('/admin/mahasiswa')->with('success', 'Mahasiswa ditambahkan');
+        $request->validate([
+            'nim' => 'required|unique:mahasiswa,nim',
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'angkatan' => 'required|digits:4',
+        ]);
+
+        Mahasiswa::create([
+            'nim' => $request->nim,
+            'nama' => $request->nama,
+            'id_prodi' => $request->id_prodi,
+            'angkatan' => $request->angkatan,
+        ]);
+
+        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan.');
     }
 
-    public function edit($id)
+    public function edit(Mahasiswa $mahasiswa)
     {
-        $m = Mahasiswa::findOrFail($id);
-        return view('admin.mahasiswa.edit', compact('m'));
+        $prodi = Prodi::all();
+        return view('admin.mahasiswa.edit', compact('mahasiswa', 'prodi'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Mahasiswa $mahasiswa)
     {
-        Mahasiswa::findOrFail($id)->update($request->all());
-        return redirect('/admin/mahasiswa')->with('success', 'Mahasiswa diupdate');
+        $request->validate([
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'angkatan' => 'required|digits:4',
+        ]);
+
+        $mahasiswa->update([
+            'nama' => $request->nama,
+            'id_prodi' => $request->id_prodi,
+            'angkatan' => $request->angkatan,
+        ]);
+
+        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil diupdate.');
     }
 
-    public function destroy($id)
+    public function destroy(Mahasiswa $mahasiswa)
     {
-        Mahasiswa::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Mahasiswa dihapus');
+        $mahasiswa->delete();
+        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil dihapus.');
     }
 }

@@ -15,14 +15,12 @@ class DosenController extends Controller
         return view('admin.dosen.index', compact('dosen'));
     }
 
-    // buat tambah data
     public function create()
     {
         $prodi = Prodi::all();
         return view('admin.dosen.create', compact('prodi'));
     }
 
-    // simpan data baru
     public function store(Request $request)
     {
         $request->validate([
@@ -34,7 +32,6 @@ class DosenController extends Controller
             'peran' => 'nullable|string|max:45',
         ]);
 
-    // simpan ke database
         Dosen::create([
             'nidn' => $request->nidn,
             'nama' => $request->nama,
@@ -44,10 +41,9 @@ class DosenController extends Controller
             'password' => $request->password ? bcrypt($request->password) : null,
         ]);
 
-    return redirect()->route('dosen.index')->with('success', 'Dosen berhasil ditambahkan.');
+        return redirect()->route('dosen.index')->with('success', 'Dosen berhasil ditambahkan.');
     }
 
-    // edit
     public function edit(Dosen $dosen)
     {
         $prodi = Prodi::all();
@@ -64,13 +60,12 @@ class DosenController extends Controller
             'password' => $request->password ? bcrypt($request->password) : $dosen->password
         ]);
 
-        return redirect('/admin/dosen')->with('success', 'Dosen berhasil diupdate.');
+        return redirect()->route('dosen.index')->with('success', 'Dosen berhasil diupdate.');
     }
 
-    // delete
     public function destroy(Dosen $dosen)
     {
         $dosen->delete();
-        return redirect('/admin/dosen')->with('success', 'Dosen berhasil dihapus.');
+        return redirect()->route('dosen.index')->with('success', 'Dosen berhasil dihapus.');
     }
 }

@@ -2,11 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DosenController;
-
-// Mahasiswa
-Route::view('/admin/mahasiswa', 'admin.mahasiswa.index')->name('admin.mahasiswa.index');
-Route::view('/admin/mahasiswa/create', 'admin.mahasiswa.create')->name('admin.mahasiswa.create');
-Route::view('/admin/mahasiswa/edit', 'admin.mahasiswa.edit')->name('admin.mahasiswa.edit');
+use App\Http\Controllers\Admin\MahasiswaController;
 
 // Matkul
 Route::view('/admin/matkul', 'admin.matkul.index')->name('admin.matkul.index');
@@ -23,8 +19,18 @@ Route::view('/admin/presensi', 'admin.presensi.index')->name('admin.presensi.ind
 Route::view('/admin/presensi/input', 'admin.presensi.input')->name('admin.presensi.input');
 Route::view('/admin/presensi/rekap', 'admin.presensi.rekap')->name('admin.presensi.rekap');
 
+
+//Route::prefix('admin')->name('admin.')->group(function () {
+//    Route::resource('mahasiswa', MahasiswaController::class)->parameters([
+//        'mahasiswa' => 'nim'
+//    ]);
+//});
+
 // Dosen (resource route dengan nama)
 Route::prefix('admin')->group(function () {
     Route::resource('dosen', DosenController::class);
 });
 
+Route::prefix('admin')->group(function () {
+    Route::resource('mahasiswa', MahasiswaController::class);
+});
