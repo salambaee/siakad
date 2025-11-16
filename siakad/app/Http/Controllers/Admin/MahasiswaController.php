@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
 use App\Models\Prodi;
@@ -23,18 +22,18 @@ class MahasiswaController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nim' => 'required|unique:mahasiswa,nim',
+        $validated = $request->validate([
+            'nim' => 'required|numeric|unique:mahasiswa,nim',
             'nama' => 'required|string|max:100',
             'id_prodi' => 'required|exists:prodi,id_prodi',
             'angkatan' => 'required|digits:4',
         ]);
 
         Mahasiswa::create([
-            'nim' => $request->nim,
-            'nama' => $request->nama,
-            'id_prodi' => $request->id_prodi,
-            'angkatan' => $request->angkatan,
+            'nim' => (int) $validated['nim'],
+            'nama' => $validated['nama'],
+            'id_prodi' => $validated['id_prodi'],
+            'angkatan' => $validated['angkatan'],
         ]);
 
         return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan.');
@@ -48,16 +47,16 @@ class MahasiswaController extends Controller
 
     public function update(Request $request, Mahasiswa $mahasiswa)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'required|string|max:100',
             'id_prodi' => 'required|exists:prodi,id_prodi',
             'angkatan' => 'required|digits:4',
         ]);
 
         $mahasiswa->update([
-            'nama' => $request->nama,
-            'id_prodi' => $request->id_prodi,
-            'angkatan' => $request->angkatan,
+            'nama' => $validated['nama'],
+            'id_prodi' => $validated['id_prodi'],
+            'angkatan' => $validated['angkatan'],
         ]);
 
         return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil diupdate.');
