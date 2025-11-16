@@ -16,7 +16,7 @@
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center min-h-screen">
+<body class="bg-gradient-to-br from-grey-600 to-indigo-800 flex items-center justify-center min-h-screen">
 
     <div class="bg-white/90 backdrop-blur shadow-2xl p-8 rounded-xl w-96 fade-in">
         
