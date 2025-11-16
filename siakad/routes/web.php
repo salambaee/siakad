@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request; // <-- TAMBAHKAN INI
-use Illuminate\Support\Facades\Auth; // <-- TAMBAHKAN INI
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\DosenController;
@@ -10,19 +10,13 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MahasiswaController as AdminMahasiswaController;
 use App\Http\Controllers\Admin\DosenController as AdminDosenController;
 
-// Landing page
 Route::get('/', function () {
     return redirect('/login');
 });
 
-// Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-// HAPUS ROUTE DI BAWAH INI KARENA DUPLIKAT DENGAN YANG DI BAWAH
-// Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-// Mahasiswa Routes (Protected)
 Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->group(function () {
     Route::get('/', [MahasiswaController::class, 'dashboard'])->name('mahasiswa.dashboard');
     Route::get('/krs', [MahasiswaController::class, 'krs'])->name('mahasiswa.krs');
@@ -32,7 +26,6 @@ Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->group(function () {
     Route::get('/informasi', [MahasiswaController::class, 'informasi'])->name('mahasiswa.informasi');
 });
 
-// Dosen Routes (Protected)
 Route::middleware(['auth:dosen'])->prefix('dosen')->group(function () {
     Route::get('/', [DosenController::class, 'dashboard'])->name('dosen.dashboard');
     Route::get('/jadwal', [DosenController::class, 'jadwal'])->name('dosen.jadwal');
@@ -41,27 +34,23 @@ Route::middleware(['auth:dosen'])->prefix('dosen')->group(function () {
     Route::get('/nilai', [DosenController::class, 'nilai'])->name('dosen.nilai');
 });
 
-// Admin Routes (Protected)
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
-    
-    // Mahasiswa CRUD
+
     Route::resource('mahasiswa', AdminMahasiswaController::class)->except(['show']);
-    
-    // Dosen CRUD
+
     Route::resource('dosen', AdminDosenController::class)->parameters([
         'dosen' => 'dosen:nidn'
     ])->except(['show']);
-    
-    // Placeholder routes untuk menu lainnya
+
     Route::get('/matkul', function () {
         return view('admin.matkul.index');
     });
-    
+
     Route::get('/kelas', function () {
         return view('admin.kelas.index');
     });
-    
+
     Route::get('/presensi', function () {
         return view('admin.presensi.index');
     });

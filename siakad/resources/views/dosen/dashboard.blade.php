@@ -1,26 +1,29 @@
 @extends('layouts.dosen')
 
 @section('content')
-<h1 class="text-2xl font-bold mb-6">Selamat Datang, Dosen (Nama)</h1>
 
-{{-- Info Cards --}}
+<h1 class="text-2xl font-bold mb-6">Selamat Datang, {{ Auth::guard('dosen')->user()->nama ?? 'Dosen' }}</h1>
+
+
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-700">Jadwal Mengajar Hari Ini</h3>
         <p class="mt-3 text-sm text-gray-500">Anda memiliki 3 kelas yang dijadwalkan hari ini.</p>
-        <a href="/dosen/jadwal" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Lihat Jadwal</a>
+        {{-- PERBAIKAN 2: Menggunakan route() helper --}}
+        <a href="{{ route('dosen.jadwal') }}" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Lihat Jadwal</a>
     </div>
 
     <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-700">Presensi Kelas</h3>
         <p class="mt-3 text-sm text-gray-500">Akses cepat untuk mengelola kehadiran mahasiswa.</p>
-        <a href="#" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Kelola Presensi</a>
+        {{-- PERBAIKAN 3: Menggunakan route() helper --}}
+        <a href="{{ route('dosen.presensi') }}" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Kelola Presensi</a>
     </div>
 
     <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-700">Penilaian</h3>
         <p class="mt-3 text-sm text-gray-500">Input atau perbarui nilai mahasiswa dengan mudah.</p>
-        <a href="#" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Buka Penilaian</a>
+        <a href="{{ route('dosen.nilai') }}" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Buka Penilaian</a>
     </div>
 </div>
 
