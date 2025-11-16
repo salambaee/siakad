@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Dosen;
 use App\Models\Prodi;
+use Illuminate\Support\Facades\Hash;
 
 class DosenController extends Controller
 {
@@ -23,22 +24,22 @@ class DosenController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nidn' => 'required|unique:dosen,nidn',
-            'nama' => 'required|string|max:45',
-            'id_prodi' => 'required|exists:prodi,id_prodi',
-            'keahlian' => 'nullable|string|max:45',
+        $validated = $request->validate([
+            'nidn' => 'required|numeric|unique:dosen,nidn',
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'nullable|exists:prodi,id_prodi',
+            'keahlian' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:4',
             'peran' => 'nullable|string|max:45',
         ]);
 
         Dosen::create([
-            'nidn' => $request->nidn,
-            'nama' => $request->nama,
-            'id_prodi' => $request->id_prodi,
-            'keahlian' => $request->keahlian,
-            'peran' => $request->peran ?? 'Dosen',
-            'password' => $request->password ? bcrypt($request->password) : null,
+            'nidn' => (int) $validated['nidn'],
+            'nama' => $validated['nama'],
+            'id_prodi' => $validated['id_prodi'] ?? null,
+            'keahlian' => $validated['keahlian'] ?? null,
+            'peran' => $validated['peran'] ?? 'Dosen',
+            'password' => isset($validated['password']) ? Hash::make($validated['password']) : null,
         ]);
 
         return redirect()->route('dosen.index')->with('success', 'Dosen berhasil ditambahkan.');
@@ -52,12 +53,20 @@ class DosenController extends Controller
 
     public function update(Request $request, Dosen $dosen)
     {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'nullable|exists:prodi,id_prodi',
+            'keahlian' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:4',
+            'peran' => 'nullable|string|max:45',
+        ]);
+
         $dosen->update([
-            'nama' => $request->nama,
-            'id_prodi' => $request->id_prodi,
-            'keahlian' => $request->keahlian,
-            'peran' => $request->peran,
-            'password' => $request->password ? bcrypt($request->password) : $dosen->password
+            'nama' => $validated['nama'],
+            'id_prodi' => $validated['id_prodi'] ?? null,
+            'keahlian' => $validated['keahlian'] ?? null,
+            'peran' => $validated['peran'] ?? $dosen->peran,
+            'password' => isset($validated['password']) ? Hash::make($validated['password']) : $dosen->password,
         ]);
 
         return redirect()->route('dosen.index')->with('success', 'Dosen berhasil diupdate.');
