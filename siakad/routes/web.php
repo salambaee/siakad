@@ -1,10 +1,89 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// Controller Auth
+// use App\Http\Controllers\AuthController; // Dihapus karena login belum dipakai
+
+// Controller Mahasiswa (Dihapus karena menggunakan Route::view)
+// ...
+
+// Controller Admin
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\MahasiswaController;
 
-// Matkul
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Route::view('/admin/matkul', 'admin.matkul.index')->name('admin.matkul.index');
 Route::view('/admin/matkul/create', 'admin.matkul.create')->name('admin.matkul.create');
 Route::view('/admin/matkul/edit', 'admin.matkul.edit')->name('admin.matkul.edit');
