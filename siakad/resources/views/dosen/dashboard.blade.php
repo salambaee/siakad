@@ -1,14 +1,14 @@
 @extends('layouts.dosen')
 
 @section('content')
-<h1 class="text-2xl font-bold mb-6">Selamat Datang, Dosen</h1>
+<h1 class="text-2xl font-bold mb-6">Selamat Datang, Dosen (Nama)</h1>
 
 {{-- Info Cards --}}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-700">Jadwal Mengajar Hari Ini</h3>
         <p class="mt-3 text-sm text-gray-500">Anda memiliki 3 kelas yang dijadwalkan hari ini.</p>
-        <a href="#" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Lihat Jadwal</a>
+        <a href="/dosen/jadwal" class="mt-4 inline-block text-blue-600 font-medium hover:underline">Lihat Jadwal</a>
     </div>
 
     <div class="bg-white shadow rounded-xl p-6 border border-gray-200">

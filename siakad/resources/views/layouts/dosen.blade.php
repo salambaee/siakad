@@ -15,22 +15,16 @@
             <nav class="flex-1">
                 <ul>
                     <li class="mb-2">
-                        <a href="/admin" class="block py-2 px-4 rounded hover:bg-blue-800">Dashboard</a>
+                        <a href="/dosen" class="block py-2 px-4 rounded hover:bg-blue-800">Dashboard</a>
                     </li>
                     <li class="mb-2">
-                        <a href="/admin/mahasiswa" class="block py-2 px-4 rounded hover:bg-blue-800">Mahasiswa</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="/admin/dosen" class="block py-2 px-4 rounded hover:bg-blue-800">Dosen</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="/admin/matkul" class="block py-2 px-4 rounded hover:bg-blue-800">Mata Kuliah</a>
+                        <a href="/dosen/krs" class="block py-2 px-4 rounded hover:bg-blue-800">KRS</a>
                     </li>
                     <li class="mb-2">
                         <a href="/admin/kelas" class="block py-2 px-4 rounded hover:bg-blue-800">Kelas</a>
                     </li>
                     <li class="mb-2">
-                        <a href="/admin/presensi" class="block py-2 px-4 rounded hover:bg-blue-800">Presensi</a>
+                        <a href="/dosen/presensi" class="block py-2 px-4 rounded hover:bg-blue-800">Presensi</a>
                     </li>
                 </ul>
             </nav>
