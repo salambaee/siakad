@@ -18,6 +18,9 @@ use App\Http\Controllers\Admin\MahasiswaController;
 |--------------------------------------------------------------------------
 */
 
+// Tambahan Login (Frontend Only)
+Route::view('/login', 'auth.login')->name('login');
+
 // Rute utama diarahkan ke dashboard mahasiswa untuk uji coba
 Route::get('/', function () {
     return redirect()->route('mahasiswa.dashboard');
