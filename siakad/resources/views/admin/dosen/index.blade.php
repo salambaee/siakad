@@ -3,7 +3,7 @@
 @section('content')
 <h1 class="text-xl font-bold mb-4">Data Dosen</h1>
 
-<a href="/admin/dosen/create" class="bg-blue-600 text-white px-4 py-2 rounded">Tambah</a>
+<a href="{{ url('/admin/dosen/create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">Tambah</a>
 
 <table class="w-full mt-4 bg-white shadow">
     <thead>
@@ -16,15 +16,21 @@
     </thead>
 
     <tbody>
+        @foreach ($dosen as $d)
         <tr class="border">
-            <td class="p-2">12345678</td>
-            <td>Dosen Contoh</td>
-            <td>Teknik Informatika</td>
+            <td class="p-2">{{ $d->nidn }}</td>
+            <td>{{ $d->nama }}</td>
+            <td>{{ $d->prodi->nama_prodi ?? '-' }}</td>
             <td>
-                <a href="/admin/dosen/edit" class="text-blue-600">Edit</a> |
-                <a href="#" class="text-red-600">Delete</a>
+                <a href="{{ url('/admin/dosen/'.$d->nidn.'/edit') }}" class="text-blue-600">Edit</a> |
+                <form action="{{ url('/admin/dosen/'.$d->nidn) }}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button class="text-red-600">Delete</button>
+                </form>
             </td>
         </tr>
+        @endforeach
     </tbody>
 </table>
 @endsection
