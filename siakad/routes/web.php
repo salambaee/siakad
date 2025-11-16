@@ -1,31 +1,4 @@
-[20:50, 16/11/2025] Salam 2041_ D4_TRPL: <?php
-
-use Illuminate\Support\Facades\Route;
-
-// Controller Auth
-// use App\Http\Controllers\AuthController; // Dihapus karena login belum dipakai
-
-// Controller Mahasiswa (Dihapus karena menggunakan Route::view)
-// ...
-
-// Controller Admin
-use App\Http\Controllers\Admin\DosenController;
-use App\Http\Controllers\Admin\MahasiswaController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// Rute utama diarahkan ke dashboard mahasiswa untuk uji coba
-Route::get('/', function () {
-    return redirect()->route('mahasiswa.dashboard');
-});
-
-// Rute Autentikasi Dihapus Sementara
-// Route::get('login', [AuthController::class, 'showLoginForm'])->…
-[23:47, 16/11/2025] Salam 2041_ D4_TRPL: <?php
+<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DosenController;
