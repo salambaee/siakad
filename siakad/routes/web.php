@@ -10,6 +10,8 @@ Route::get('/', function () {
     return redirect()->route('admin.dashboard');
 });
 
+Route::get('/login', 'auth.login')->name('login');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
         return redirect()->route('admin.dashboard');
