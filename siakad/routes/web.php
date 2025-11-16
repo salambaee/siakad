@@ -1,40 +1,75 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\DosenController;
-use App\Http\Controllers\Admin\MahasiswaController;
+use Illuminate\Http\Request; // <-- TAMBAHKAN INI
+use Illuminate\Support\Facades\Auth; // <-- TAMBAHKAN INI
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MahasiswaController;
+use App\Http\Controllers\DosenController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Mahasiswa\KrsController;
+use App\Http\Controllers\Admin\MahasiswaController as AdminMahasiswaController;
+use App\Http\Controllers\Admin\DosenController as AdminDosenController;
 
+// Landing page
 Route::get('/', function () {
-    return redirect()->route('admin.dashboard');
+    return redirect('/login');
 });
 
-Route::view('/login', 'auth.login')->name('login');
+// Authentication Routes
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('admin.dashboard');
+// HAPUS ROUTE DI BAWAH INI KARENA DUPLIKAT DENGAN YANG DI BAWAH
+// Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Mahasiswa Routes (Protected)
+Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->group(function () {
+    Route::get('/', [MahasiswaController::class, 'dashboard'])->name('mahasiswa.dashboard');
+    Route::get('/krs', [MahasiswaController::class, 'krs'])->name('mahasiswa.krs');
+    Route::post('/krs', [MahasiswaController::class, 'storeKrs'])->name('mahasiswa.krs.store');
+    Route::get('/jadwal', [MahasiswaController::class, 'jadwal'])->name('mahasiswa.jadwal');
+    Route::get('/nilai', [MahasiswaController::class, 'nilai'])->name('mahasiswa.nilai');
+    Route::get('/informasi', [MahasiswaController::class, 'informasi'])->name('mahasiswa.informasi');
+});
+
+// Dosen Routes (Protected)
+Route::middleware(['auth:dosen'])->prefix('dosen')->group(function () {
+    Route::get('/', [DosenController::class, 'dashboard'])->name('dosen.dashboard');
+    Route::get('/jadwal', [DosenController::class, 'jadwal'])->name('dosen.jadwal');
+    Route::get('/krs', [DosenController::class, 'krs'])->name('dosen.krs');
+    Route::get('/presensi', [DosenController::class, 'presensi'])->name('dosen.presensi');
+    Route::get('/nilai', [DosenController::class, 'nilai'])->name('dosen.nilai');
+});
+
+// Admin Routes (Protected)
+Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    
+    // Mahasiswa CRUD
+    Route::resource('mahasiswa', AdminMahasiswaController::class)->except(['show']);
+    
+    // Dosen CRUD
+    Route::resource('dosen', AdminDosenController::class)->parameters([
+        'dosen' => 'dosen:nidn'
+    ])->except(['show']);
+    
+    // Placeholder routes untuk menu lainnya
+    Route::get('/matkul', function () {
+        return view('admin.matkul.index');
     });
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('dosen', DosenController::class);
-    Route::resource('mahasiswa', MahasiswaController::class);
-});
-
-Route::prefix('dosen')->name('dosen.')->group(function () {
-    Route::view('/', 'dosen.dashboard')->name('dashboard');
-    Route::view('/jadwal', 'dosen.jadwal')->name('jadwal');
-    Route::view('/krs', 'dosen.krs')->name('krs');
-    Route::view('/presensi', 'dosen.presensi')->name('presensi');
-});
-
-Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('mahasiswa.dashboard');
+    
+    Route::get('/kelas', function () {
+        return view('admin.kelas.index');
     });
-    Route::view('dashboard', 'mahasiswa.dashboard')->name('dashboard');
-    Route::view('krs', 'mahasiswa.krs')->name('krs');
-    Route::post('krs', [KrsController::class, 'store'])->name('krs.store');
-    Route::view('jadwal', 'mahasiswa.jadwal')->name('jadwal');
-    Route::view('nilai', 'mahasiswa.nilai')->name('nilai');
+    
+    Route::get('/presensi', function () {
+        return view('admin.presensi.index');
+    });
 });
+
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/login');
+})->name('logout');

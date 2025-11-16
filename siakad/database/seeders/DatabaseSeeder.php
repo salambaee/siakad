@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             MataKuliahSeeder::class,
             MahasiswaSeeder::class,
             JadwalSeeder::class,
-]);
+            AdminSeeder::class,
+        ]);
     }
 }

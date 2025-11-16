@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Mahasiswa - SIAKAD</title>
     
-    <!-- Memuat Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -30,8 +29,8 @@
 <body class="bg-gray-100 font-sans">
     <div class="flex h-screen">
 
-        <!-- Sidebar Navigasi -->
-        <aside class="w-64 bg-white shadow-lg p-6">
+        {{-- Penambahan 'flex flex-col' agar 'mt-auto' pada logout berfungsi --}}
+        <aside class="w-64 bg-white shadow-lg p-6 flex flex-col">
             <h1 class="text-2xl font-bold text-blue-600 mb-8">SIAKAD</h1>
             
             <nav class="space-y-2">
@@ -53,15 +52,16 @@
             </nav>
             
             <div class="mt-auto pt-6">
-                 <a href="#" class="sidebar-link text-red-600 hover:bg-red-50">
-                    Logout
-                 </a>
+                 <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="sidebar-link text-red-600 hover:bg-red-50 w-full text-left">
+                        Logout
+                    </button>
+                </form>
             </div>
         </aside>
 
-        <!-- Konten Utama -->
         <main class="flex-1 p-8 overflow-y-auto">
-            <!-- Ini adalah tempat di mana konten dari dashboard.blade.php (dll) akan ditampilkan -->
             @yield('content')
         </main>
         

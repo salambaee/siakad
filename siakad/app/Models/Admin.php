@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Admin extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'admin';
+    protected $primaryKey = 'id_admin';
+    public $timestamps = false; // Karena tabel admin tidak punya created_at/updated_at
+
+    protected $fillable = [
+        'nama',
+        'username',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    // Method untuk authentication menggunakan username
+    public function getAuthIdentifierName()
+    {
+        return 'username';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+}

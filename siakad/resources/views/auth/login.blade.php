@@ -19,11 +19,20 @@
 <body class="bg-gradient-to-br from-grey-600 to-indigo-800 flex items-center justify-center min-h-screen">
 
     <div class="bg-white/90 backdrop-blur shadow-2xl p-8 rounded-xl w-96 fade-in">
-        
+
         <h1 class="text-3xl font-bold text-center mb-1 text-gray-800">SIAKAD</h1>
         <p class="text-center text-gray-500 mb-6 text-sm">Silahkan login untuk melanjutkan</p>
 
-        <form>
+        {{-- Error Messages --}}
+        @if ($errors->any())
+            <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
+        {{-- ✅ FIXED: Form dengan action dan method yang benar --}}
+        <form action="{{ route('login') }}" method="POST">
+            @csrf
 
             <!-- Username -->
             <label class="block mb-2 text-gray-700 font-semibold">Username</label>
@@ -33,7 +42,9 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 1115 0v.75H4.5v-.75z" />
                     </svg>
                 </span>
-                <input type="text" class="w-full border p-2 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Masukkan username">
+                <input type="text" name="username" value="{{ old('username') }}" 
+                       class="w-full border p-2 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" 
+                       placeholder="NIM / NIDN / Username" required>
             </div>
 
             <!-- Password -->
@@ -46,7 +57,9 @@
                 </span>
 
                 <!-- INPUT PASSWORD -->
-                <input id="passwordInput" type="password" class="w-full border p-2 pl-10 pr-10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Masukkan password">
+                <input id="passwordInput" type="password" name="password"
+                       class="w-full border p-2 pl-10 pr-10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
+                       placeholder="Masukkan password" required>
 
                 <!-- ICON MATA -->
                 <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePassword()">
@@ -58,7 +71,7 @@
             </div>
 
             <!-- Button -->
-            <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold tracking-wide shadow-md">
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold tracking-wide shadow-md">
                 Login
             </button>
 

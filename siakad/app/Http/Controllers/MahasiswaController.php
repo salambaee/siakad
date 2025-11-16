@@ -13,18 +13,19 @@ class MahasiswaController extends Controller
 {
     private function getNim()
     {
-        if (Auth::check()) {
-            return Auth::user()->nim;
+        // ✅ FIXED: Tidak ada hardcoded value
+        if (Auth::guard('mahasiswa')->check()) {
+            return Auth::guard('mahasiswa')->user()->nim;
         }
         
-        return 362458302034; 
+        abort(401, 'Unauthorized');
     }
 
     public function dashboard()
     {
         $nim = $this->getNim();
-        $mahasiswa = Mahasiswa::find($nim);
-        
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
         return view('mahasiswa.dashboard', compact('mahasiswa'));
     }
 
@@ -42,12 +43,41 @@ class MahasiswaController extends Controller
                 $query->where('id_prodi', $mahasiswa->id_prodi);
             })
             ->get();
-            
+
         $krsDiambil = Krs::where('nim', $nim)
                         ->pluck('id_jadwal')
                         ->all();
 
-        return view('mahasiswa.krs', compact('jadwalsTersedia', 'krsDiambil'));
+        return view('mahasiswa.krs', compact('jadwalsTersedia', 'krsDiambil', 'mahasiswa'));
+    }
+
+    public function storeKrs(Request $request)
+    {
+        $nim = $this->getNim();
+        
+        $request->validate([
+            'id_jadwal' => 'required|array',
+            'id_jadwal.*' => 'exists:jadwal,id_jadwal',
+        ]);
+
+        // Hapus KRS lama untuk semester ini
+        Krs::where('nim', $nim)
+            ->where('semester', $request->semester ?? 'Ganjil')
+            ->where('tahun_ajaran', $request->tahun_ajaran ?? '2024/2025')
+            ->delete();
+
+        // Insert KRS baru
+        foreach ($request->id_jadwal as $jadwalId) {
+            Krs::create([
+                'nim' => $nim,
+                'id_jadwal' => $jadwalId,
+                'semester' => $request->semester ?? 'Ganjil',
+                'tahun_ajaran' => $request->tahun_ajaran ?? '2024/2025',
+                'status' => 'Pending',
+            ]);
+        }
+
+        return redirect()->route('mahasiswa.krs')->with('success', 'KRS berhasil diajukan!');
     }
 
     public function jadwal()
@@ -55,6 +85,7 @@ class MahasiswaController extends Controller
         $nim = $this->getNim();
         $jadwals = Krs::with('jadwal.matkul', 'jadwal.dosen')
                     ->where('nim', $nim)
+                    ->where('status', 'Disetujui')
                     ->get();
 
         return view('mahasiswa.jadwal', compact('jadwals'));
@@ -74,12 +105,26 @@ class MahasiswaController extends Controller
     public function informasi()
     {
         $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+        
         $krs = Krs::with('jadwal.matkul', 'nilai')
                     ->where('nim', $nim)
                     ->get();
-        
-        $ipk = 0;
 
-        return view('mahasiswa.informasi', compact('krs', 'ipk'));
+        // Hitung IPK
+        $totalSks = 0;
+        $totalBobot = 0;
+
+        foreach ($krs as $item) {
+            if ($item->nilai && $item->nilai->nilai_angka) {
+                $sks = $item->jadwal->matkul->sks ?? 0;
+                $totalSks += $sks;
+                $totalBobot += ($sks * $item->nilai->nilai_angka);
+            }
+        }
+
+        $ipk = $totalSks > 0 ? round($totalBobot / $totalSks, 2) : 0;
+
+        return view('mahasiswa.informasi', compact('mahasiswa', 'krs', 'ipk'));
     }
 }
