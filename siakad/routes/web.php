@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\MahasiswaController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Mahasiswa\KrsController;
 
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
@@ -31,6 +32,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
     });
     Route::view('dashboard', 'mahasiswa.dashboard')->name('dashboard');
     Route::view('krs', 'mahasiswa.krs')->name('krs');
+    Route::post('krs', [KrsController::class, 'store'])->name('krs.store');
     Route::view('jadwal', 'mahasiswa.jadwal')->name('jadwal');
     Route::view('nilai', 'mahasiswa.nilai')->name('nilai');
 });
