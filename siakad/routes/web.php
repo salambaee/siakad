@@ -1,33 +1,21 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-// Controller Auth
-// use App\Http\Controllers\AuthController; // Dihapus karena login belum dipakai
-
-// Controller Mahasiswa (Dihapus karena menggunakan Route::view)
-// ...
-
-// Controller Admin
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\MahasiswaController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+Route::view('/dosen', 'dosen.dashboard')->name('dosen.dashboard');
+Route::view('/dosen/jadwal', 'dosen.jadwal')->name('dosen.jadwal');
+Route::view('/dosen/krs', 'dosen.krs')->name('dosen.krs');
+Route::view('/dosen/presensi', 'dosen.presensi')->name('dosen.presensi');
 
-// Rute utama diarahkan ke dashboard mahasiswa untuk uji coba
-Route::get('/', function () {
-    return redirect()->route('mahasiswa.dashboard');
+Route::prefix('admin')->group(function () {
+    Route::resource('dosen', DosenController::class);
 });
 
-// Rute Autentikasi Dihapus Sementara
-// Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-// Route::post('login', [AuthController::class, 'login']);
-// Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-
+Route::prefix('admin')->group(function () {
+    Route::resource('mahasiswa', MahasiswaController::class);
+});
 
 // Rute untuk Mahasiswa (Menggunakan Route::view)
 Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
@@ -41,17 +29,6 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
     // Route::post('krs', [KrsController::class, 'store'])->name('krs.store'); // Dihapus sementara
     Route::view('jadwal', 'mahasiswa.jadwal')->name('jadwal');
     Route::view('nilai', 'mahasiswa.nilai')->name('nilai');
-});
-
-// Rute untuk Dosen
-Route::prefix('dosen')->name('dosen.')->group(function () {
-    // Redirect /dosen ke /dosen/dashboard
-    Route::get('/', function () {
-        return redirect()->route('dosen.dashboard');
-    });
-    
-    Route::view('dashboard', 'dosen.dashboard')->name('dashboard');
-    // Tambahkan rute dosen lainnya di sini
 });
 
 // Rute untuk Admin
