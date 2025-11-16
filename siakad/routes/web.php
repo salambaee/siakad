@@ -10,6 +10,9 @@ Route::view('/admin/matkul/create', 'admin.matkul.create')->name('admin.matkul.c
 Route::view('/admin/matkul/edit', 'admin.matkul.edit')->name('admin.matkul.edit');
 
 Route::view('/dosen', 'dosen.dashboard')->name('dosen.dashboard');
+Route::view('/dosen/jadwal', 'dosen.jadwal')->name('dosen.jadwal');
+Route::view('/dosen/krs', 'dosen.krs')->name('dosen.krs');
+Route::view('/dosen/presensi', 'dosen.presensi')->name('dosen.presensi');
 
 Route::prefix('admin')->group(function () {
     Route::resource('dosen', DosenController::class);
