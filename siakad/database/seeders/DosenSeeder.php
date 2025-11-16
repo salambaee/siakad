@@ -19,7 +19,7 @@ class DosenSeeder extends Seeder
                 'nama' => 'Eka Mistiko Rini, S.Kom, M.Kom.',
                 'id_prodi' => null,
                 'keahlian' => null,
-                'password' => Hash::make('1011018001'),
+                'password' => Hash::make('1011018001'), // Menggunakan NIDN sebagai password default
                 'peran' => 'Dosen'
             ],
             [
