@@ -12,10 +12,15 @@ class Prodi extends Model
     protected $table = 'prodi';
     protected $primaryKey = 'id_prodi';
     public $timestamps = false;
-    protected $fillable = ['nama_prodi'];
+    protected $fillable = ['nama_prodi', 'jenjang'];
 
     public function dosen()
     {
         return $this->hasMany(Dosen::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function mahasiswa()
+    {
+        return $this->hasMany(Mahasiswa::class, 'id_prodi', 'id_prodi');
     }
 }
