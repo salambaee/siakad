@@ -17,7 +17,6 @@ class DosenController extends Controller
 
     public function jadwal()
     {
-        // Ganti 'nidn' dengan key yang sesuai dari Auth::user()
         $nidn = Auth::user()->nidn; 
         
         $jadwals = Jadwal::with('matkul')
@@ -29,7 +28,6 @@ class DosenController extends Controller
 
     public function krs()
     {
-        // Logika untuk Dosen Wali (DPA)
         return view('dosen.krs');
     }
 

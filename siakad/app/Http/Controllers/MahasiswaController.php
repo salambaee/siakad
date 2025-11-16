@@ -11,18 +11,13 @@ use Illuminate\Support\Facades\Auth;
 
 class MahasiswaController extends Controller
 {
-    /**
-     * Mendapatkan NIM. Prioritaskan user yang login,
-     * jika tidak ada, gunakan NIM hardcode untuk testing.
-     */
     private function getNim()
     {
         if (Auth::check()) {
             return Auth::user()->nim;
         }
         
-        // Ganti NIM ini jika Anda ingin menguji mahasiswa lain
-        return 362458302034; // NIM Heri Herlambang (dari MahasiswaSeeder)
+        return 362458302034; 
     }
 
     public function dashboard()
@@ -38,7 +33,6 @@ class MahasiswaController extends Controller
         $nim = $this->getNim();
         $mahasiswa = Mahasiswa::with('prodi')->find($nim);
 
-        // Jika mahasiswa tidak ditemukan (NIM hardcode salah)
         if (!$mahasiswa) {
             abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
         }
@@ -72,7 +66,7 @@ class MahasiswaController extends Controller
         $khs = Krs::with('jadwal.matkul', 'nilai')
                     ->where('nim', $nim)
                     ->get()
-                    ->groupBy('semester'); // 'semester' mungkin null, perlu penanganan
+                    ->groupBy('semester');
 
         return view('mahasiswa.nilai', compact('khs'));
     }
@@ -84,7 +78,7 @@ class MahasiswaController extends Controller
                     ->where('nim', $nim)
                     ->get();
         
-        $ipk = 0; // Tambahkan logika hitung IPK di sini
+        $ipk = 0;
 
         return view('mahasiswa.informasi', compact('krs', 'ipk'));
     }
