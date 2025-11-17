@@ -12,7 +12,7 @@ class MahasiswaSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('mahasiswa')->insert([
+        $mahasiswaData = [
             [ 'nim' => 362458302034, 'nama' => 'Heri Herlambang', 'id_prodi' => 1, 'angkatan' => '2024' ],
             [ 'nim' => 362458302035, 'nama' => 'Moh. Jevon Attaillah', 'id_prodi' => 1, 'angkatan' => '2024' ],
             [ 'nim' => 362458302036, 'nama' => 'Muhammad Rendra Irawan', 'id_prodi' => 1, 'angkatan' => '2024' ],
@@ -43,6 +43,18 @@ class MahasiswaSeeder extends Seeder
             [ 'nim' => 362458302145, 'nama' => 'Anisa Suci Rahmawati', 'id_prodi' => 1, 'angkatan' => '2024' ],
             [ 'nim' => 362458302146, 'nama' => 'Ahmad Maulidin', 'id_prodi' => 1, 'angkatan' => '2024' ],
             [ 'nim' => 362458302147, 'nama' => 'Achmad Alfarizy Satriya G', 'id_prodi' => 1, 'angkatan' => '2024' ],
-        ]);
+        ];
+
+        // DIPERBAIKI: Tambahkan timestamps saat insert
+        foreach ($mahasiswaData as $mhs) {
+            DB::table('mahasiswa')->insert([
+                'nim' => $mhs['nim'],
+                'nama' => $mhs['nama'],
+                'id_prodi' => $mhs['id_prodi'],
+                'angkatan' => $mhs['angkatan'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 }

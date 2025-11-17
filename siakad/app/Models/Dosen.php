@@ -13,6 +13,7 @@ class Dosen extends Authenticatable
     protected $primaryKey = 'nidn';
     public $incrementing = false;
     protected $keyType = 'integer';
+    public $timestamps = true; // DIPERBAIKI: Sesuai dengan migration
 
     protected $fillable = [
         'nidn',

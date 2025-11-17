@@ -13,6 +13,7 @@ class Mahasiswa extends Authenticatable
     protected $primaryKey = 'nim';
     public $incrementing = false;
     protected $keyType = 'integer';
+    public $timestamps = true;
 
     protected $fillable = [
         'nim',
@@ -21,11 +22,9 @@ class Mahasiswa extends Authenticatable
         'angkatan',
     ];
 
-    // Karena mahasiswa tidak punya kolom password di database,
-    // kita override method ini untuk menggunakan NIM sebagai password
     public function getAuthPassword()
     {
-        return $this->nim; // NIM sebagai password default
+        return $this->nim;
     }
 
     public function getAuthIdentifierName()

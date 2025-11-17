@@ -5,19 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Mahasiswa;
 use App\Models\Jadwal;
 use App\Models\Krs;
-use App\Models\Matkul;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MahasiswaController extends Controller
 {
+    /**
+     * Get NIM dari user yang sedang login
+     */
     private function getNim()
     {
-        // ✅ FIXED: Tidak ada hardcoded value
         if (Auth::guard('mahasiswa')->check()) {
             return Auth::guard('mahasiswa')->user()->nim;
         }
-        
+
         abort(401, 'Unauthorized');
     }
 
@@ -25,6 +26,10 @@ class MahasiswaController extends Controller
     {
         $nim = $this->getNim();
         $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
 
         return view('mahasiswa.dashboard', compact('mahasiswa'));
     }
@@ -44,9 +49,10 @@ class MahasiswaController extends Controller
             })
             ->get();
 
+        // DIPERBAIKI: Gunakan toArray() untuk konsistensi
         $krsDiambil = Krs::where('nim', $nim)
                         ->pluck('id_jadwal')
-                        ->all();
+                        ->toArray();
 
         return view('mahasiswa.krs', compact('jadwalsTersedia', 'krsDiambil', 'mahasiswa'));
     }
@@ -54,16 +60,22 @@ class MahasiswaController extends Controller
     public function storeKrs(Request $request)
     {
         $nim = $this->getNim();
-        
+
+        // DIPERBAIKI: Tambahkan validasi untuk semester dan tahun ajaran
         $request->validate([
             'id_jadwal' => 'required|array',
             'id_jadwal.*' => 'exists:jadwal,id_jadwal',
+            'semester' => 'nullable|string',
+            'tahun_ajaran' => 'nullable|string',
         ]);
+
+        $semester = $request->semester ?? 'Ganjil';
+        $tahunAjaran = $request->tahun_ajaran ?? '2024/2025';
 
         // Hapus KRS lama untuk semester ini
         Krs::where('nim', $nim)
-            ->where('semester', $request->semester ?? 'Ganjil')
-            ->where('tahun_ajaran', $request->tahun_ajaran ?? '2024/2025')
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
             ->delete();
 
         // Insert KRS baru
@@ -71,8 +83,8 @@ class MahasiswaController extends Controller
             Krs::create([
                 'nim' => $nim,
                 'id_jadwal' => $jadwalId,
-                'semester' => $request->semester ?? 'Ganjil',
-                'tahun_ajaran' => $request->tahun_ajaran ?? '2024/2025',
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
                 'status' => 'Pending',
             ]);
         }
@@ -106,7 +118,11 @@ class MahasiswaController extends Controller
     {
         $nim = $this->getNim();
         $mahasiswa = Mahasiswa::with('prodi')->find($nim);
-        
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
         $krs = Krs::with('jadwal.matkul', 'nilai')
                     ->where('nim', $nim)
                     ->get();
@@ -116,14 +132,15 @@ class MahasiswaController extends Controller
         $totalBobot = 0;
 
         foreach ($krs as $item) {
-            if ($item->nilai && $item->nilai->nilai_angka) {
+            // DIPERBAIKI: Cek nilai null dengan lebih teliti
+            if ($item->nilai && $item->nilai->nilai_angka !== null) {
                 $sks = $item->jadwal->matkul->sks ?? 0;
                 $totalSks += $sks;
                 $totalBobot += ($sks * $item->nilai->nilai_angka);
             }
         }
 
-        $ipk = $totalSks > 0 ? round($totalBobot / $totalSks, 2) : 0;
+        $ipk = $totalSks > 0 ? round($totalBobot / $totalSks, 2) : 0.00;
 
         return view('mahasiswa.informasi', compact('mahasiswa', 'krs', 'ipk'));
     }
