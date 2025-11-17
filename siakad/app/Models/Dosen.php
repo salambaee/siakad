@@ -8,12 +8,12 @@ use Illuminate\Notifications\Notifiable;
 class Dosen extends Authenticatable
 {
     use Notifiable;
-
+    
     protected $table = 'dosen';
     protected $primaryKey = 'nidn';
     public $incrementing = false;
     protected $keyType = 'integer';
-    public $timestamps = true; 
+    public $timestamps = true;
 
     protected $fillable = [
         'nidn',
@@ -46,5 +46,10 @@ class Dosen extends Authenticatable
     public function getAuthPassword()
     {
         return $this->password;
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'nidn';
     }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
 use App\Models\Prodi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class MahasiswaController extends Controller
 {
@@ -28,15 +29,14 @@ class MahasiswaController extends Controller
             'id_prodi' => 'required|exists:prodi,id_prodi',
             'angkatan' => 'required|digits:4',
         ]);
-
         Mahasiswa::create([
             'nim' => (int) $validated['nim'],
             'nama' => $validated['nama'],
             'id_prodi' => $validated['id_prodi'],
             'angkatan' => $validated['angkatan'],
+            'password' => Hash::make((string)$validated['nim']),
         ]);
-
-        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan.');
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan.');
     }
 
     public function edit(Mahasiswa $mahasiswa)
@@ -52,19 +52,17 @@ class MahasiswaController extends Controller
             'id_prodi' => 'required|exists:prodi,id_prodi',
             'angkatan' => 'required|digits:4',
         ]);
-
         $mahasiswa->update([
             'nama' => $validated['nama'],
             'id_prodi' => $validated['id_prodi'],
             'angkatan' => $validated['angkatan'],
         ]);
-
-        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil diupdate.');
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil diupdate.');
     }
 
     public function destroy(Mahasiswa $mahasiswa)
     {
         $mahasiswa->delete();
-        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil dihapus.');
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil dihapus.');
     }
 }

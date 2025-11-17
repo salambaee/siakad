@@ -20,11 +20,12 @@ class Mahasiswa extends Authenticatable
         'nama',
         'id_prodi',
         'angkatan',
+        'password',
     ];
 
     public function getAuthPassword()
     {
-        return $this->nim;
+        return $this->password;
     }
 
     public function getAuthIdentifierName()

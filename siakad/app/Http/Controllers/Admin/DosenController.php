@@ -32,7 +32,7 @@ class DosenController extends Controller
             'password' => 'nullable|string|min:4',
             'peran' => 'nullable|string|max:45',
         ]);
-
+        
         Dosen::create([
             'nidn' => (int) $validated['nidn'],
             'nama' => $validated['nama'],
@@ -40,24 +40,21 @@ class DosenController extends Controller
             'keahlian' => $validated['keahlian'] ?? null,
             'peran' => $validated['peran'] ?? 'Dosen',
             'password' => isset($validated['password']) && !empty($validated['password'])
-                ? Hash::make($validated['password'])
+                 ? Hash::make($validated['password'])
                 : Hash::make($validated['nidn']),
         ]);
-
+        
         return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil ditambahkan.');
     }
 
-    public function edit($nidn)
+    public function edit(Dosen $dosen)
     {
-        $dosen = Dosen::findOrFail($nidn);
         $prodi = Prodi::all();
         return view('admin.dosen.edit', compact('dosen', 'prodi'));
     }
 
-    public function update(Request $request, $nidn)
+    public function update(Request $request, Dosen $dosen)
     {
-        $dosen = Dosen::findOrFail($nidn);
-
         $validated = $request->validate([
             'nama' => 'required|string|max:100',
             'id_prodi' => 'nullable|exists:prodi,id_prodi',
@@ -65,7 +62,7 @@ class DosenController extends Controller
             'password' => 'nullable|string|min:4',
             'peran' => 'nullable|string|max:45',
         ]);
-
+        
         $dosen->update([
             'nama' => $validated['nama'],
             'id_prodi' => $validated['id_prodi'] ?? null,
@@ -75,13 +72,12 @@ class DosenController extends Controller
                 ? Hash::make($validated['password'])
                 : $dosen->password,
         ]);
-
+        
         return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil diupdate.');
     }
 
-    public function destroy($nidn)
+    public function destroy(Dosen $dosen)
     {
-        $dosen = Dosen::findOrFail($nidn);
         $dosen->delete();
         return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil dihapus.');
     }

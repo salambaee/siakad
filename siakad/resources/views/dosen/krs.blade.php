@@ -1,102 +1,85 @@
-@extends('layouts.dosen')
+@extends('layouts.dosen') 
 
 @section('content')
-<h1 class="text-2xl font-bold mb-6">KRS Mahasiswa</h1>
+<div>
+    <h2>KRS Mahasiswa</h2>
 
-{{-- Pilih Mahasiswa --}}
-<div class="bg-white shadow rounded-xl p-6 border border-gray-200 mb-8">
-    <h2 class="text-lg font-semibold text-gray-700 mb-4">Pilih Mahasiswa</h2>
+    @if(session('success'))
+        <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+            {{ session('success') }}
+        </div>
+    @endif
 
-    <form class="flex gap-4">
-        <select class="border border-gray-300 rounded-lg px-4 py-2 w-64">
-            <option>Pilih Mahasiswa</option>
-            <option>Andri Setiawan</option>
-            <option>Budi Prasetyo</option>
-            <option>Fajar Nugraha</option>
-        </select>
-
-        <button
-            class="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-            Tampilkan KRS
-        </button>
-    </form>
-</div>
-
-{{-- Status KRS --}}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-700">Mahasiswa</h3>
-        <p class="mt-3 text-sm text-gray-500">Andri Setiawan • 2341720013</p>
+    <div style="margin-bottom: 20px;">
+        <form action="{{ route('dosen.krs') }}" method="GET">
+            <label for="mahasiswa_id">Pilih Mahasiswa</label>
+            <select name="mahasiswa_id" id="mahasiswa_id" onchange="this.form.submit()">
+                <option value="">Pilih Mahasiswa</option>
+                
+                @foreach($mahasiswaList as $mhs)
+                    <option value="{{ $mhs->nim }}" 
+                            {{ ($mahasiswaDetail && $mahasiswaDetail->nim == $mhs->nim) ? 'selected' : '' }}>
+                        {{ $mhs->nama }} ({{ $mhs->nim }})
+                    </option>
+                @endforeach
+                
+            </select>
+            <button type="submit">Tampilkan KRS</button>
+        </form>
     </div>
 
-    <div class="bg-white shadow rounded-xl p-6 border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-700">Status KRS</h3>
-        <p class="mt-3 text-sm text-yellow-600 font-medium">Menunggu Persetujuan</p>
-    </div>
+    @if($mahasiswaDetail)
+        <hr>
+        <h3>Mahasiswa</h3>
+        <p><strong>{{ $mahasiswaDetail->nama }} • {{ $mahasiswaDetail->nim }}</strong></p>
 
-    <div class="bg-white shadow rounded-xl p-6 border border-gray-200 flex items-center gap-4">
-        <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Setujui</button>
-        <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Tolak</button>
-    </div>
-</div>
+        @if($krsMahasiswa && $krsMahasiswa->count() > 0)
+            <form action="{{ route('dosen.krs.updateStatus') }}" method="POST" style="margin-bottom: 20px;">
+                @csrf
+                <input type="hidden" name="nim" value="{{ $mahasiswaDetail->nim }}">
+                
+                <p>Status KRS: <strong>Menunggu Persetujuan</strong></p>
+                <button type="submit" name="status" value="Disetujui" style="background-color: #28a745; color: white; padding: 8px 12px; border: none; cursor: pointer; border-radius: 4px;">
+                    Setujui
+                </button>
+                <button type="submit" name="status" value="Ditolak" style="background-color: #dc3545; color: white; padding: 8px 12px; border: none; cursor: pointer; border-radius: 4px;">
+                    Tolak
+                </button>
+            </form>
 
-{{-- Tabel KRS --}}
-<div class="bg-white shadow rounded-xl p-6 border border-gray-200 mb-8">
-    <h2 class="text-xl font-semibold text-gray-700 mb-4">Daftar Mata Kuliah Yang Diambil</h2>
-
-    <table class="w-full text-left border-collapse">
-        <thead>
-            <tr class="border-b">
-                <th class="py-3 text-gray-600">Kode</th>
-                <th class="py-3 text-gray-600">Mata Kuliah</th>
-                <th class="py-3 text-gray-600">SKS</th>
-                <th class="py-3 text-gray-600">Hari</th>
-                <th class="py-3 text-gray-600">Waktu</th>
-                <th class="py-3 text-gray-600">Ruang</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y">
-            <tr>
-                <td class="py-3 font-medium">TI301</td>
-                <td class="py-3">Pemrograman Web</td>
-                <td class="py-3">3</td>
-                <td class="py-3">Senin</td>
-                <td class="py-3">09:00 – 11:00</td>
-                <td class="py-3">B205</td>
-            </tr>
-
-            <tr>
-                <td class="py-3 font-medium">TI205</td>
-                <td class="py-3">Struktur Data</td>
-                <td class="py-3">3</td>
-                <td class="py-3">Selasa</td>
-                <td class="py-3">13:00 – 15:00</td>
-                <td class="py-3">A102</td>
-            </tr>
-
-            <tr>
-                <td class="py-3 font-medium">TI410</td>
-                <td class="py-3">Basis Data</td>
-                <td class="py-3">3</td>
-                <td class="py-3">Rabu</td>
-                <td class="py-3">10:00 – 12:00</td>
-                <td class="py-3">D201</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-{{-- Catatan --}}
-<div class="bg-white shadow rounded-xl p-6 border border-gray-200">
-    <h2 class="text-xl font-semibold text-gray-700 mb-4">Catatan Dosen Wali</h2>
-
-    <textarea
-        class="w-full border border-gray-300 rounded-lg p-3"
-        rows="4"
-        placeholder="Tambahkan catatan atau alasan bila menolak KRS..."></textarea>
-
-    <button class="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-        Simpan Catatan
-    </button>
+            <h4>Daftar Mata Kuliah Yang Diambil</h4>
+            <table border="1" cellpadding="8" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #f4f4f4;">
+                    <tr>
+                        <th>Kode</th>
+                        <th>Mata Kuliah</th>
+                        <th>SKS</th>
+                        <th>Hari</th>
+                        <th>Waktu</th>
+                        <th>Ruang</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($krsMahasiswa as $krs)
+                        <tr>
+                            <td>{{ $krs->jadwal->matkul->kode_mk }}</td>
+                            <td>{{ $krs->jadwal->matkul->nama_mk }}</td>
+                            <td>{{ $krs->jadwal->matkul->sks }}</td>
+                            <td>{{ $krs->jadwal->hari }}</td>
+                            <td>{{ $krs->jadwal->jam }}</td>
+                            <td>{{ $krs->jadwal->ruang }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <p>Tidak ada KRS yang menunggu persetujuan untuk mahasiswa ini.</p>
+        @endif
+    
+    @elseif(request()->query('mahasiswa_id'))
+        <p>Mahasiswa tidak ditemukan.</p>
+    @else
+        <p>Silakan pilih mahasiswa untuk melihat detail KRS.</p>
+    @endif
 </div>
 @endsection

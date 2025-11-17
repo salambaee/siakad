@@ -32,13 +32,11 @@ class AuthController extends Controller
             'username' => 'required',
             'password' => 'required',
         ]);
-
         $username = $request->username;
         $password = $request->password;
 
         if (is_numeric($username) && strlen($username) == 10) {
             $dosen = Dosen::where('nidn', $username)->first();
-            
             if ($dosen && Hash::check($password, $dosen->password)) {
                 Auth::guard('dosen')->login($dosen);
                 return redirect()->intended('/dosen');
@@ -47,8 +45,7 @@ class AuthController extends Controller
 
         if (is_numeric($username) && strlen($username) == 12) {
             $mahasiswa = Mahasiswa::where('nim', $username)->first();
-
-            if ($mahasiswa && $password == $username) {
+            if ($mahasiswa && Hash::check($password, $mahasiswa->password)) {
                 Auth::guard('mahasiswa')->login($mahasiswa);
                 return redirect()->intended('/mahasiswa');
             }
@@ -56,7 +53,6 @@ class AuthController extends Controller
 
         if (!is_numeric($username)) {
             $admin = Admin::where('username', $username)->first();
-            
             if ($admin && Hash::check($password, $admin->password)) {
                 Auth::guard('admin')->login($admin);
                 return redirect()->intended('/admin');
