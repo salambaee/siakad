@@ -4,7 +4,6 @@
 
 <h1 class="text-2xl font-bold mb-6">Informasi Akademik</h1>
 
-<!-- TAB MENU -->
 <div class="border-b mb-4 flex gap-6">
     <button onclick="openTab('khs')" class="tab-btn font-semibold p-2 border-b-2 border-blue-600">KHS</button>
     <button onclick="openTab('transkrip')" class="tab-btn p-2">Transkrip</button>
@@ -12,7 +11,6 @@
     <button onclick="openTab('presensi')" class="tab-btn p-2">Presensi</button>
 </div>
 
-<!-- ====================== TAB KHS ====================== -->
 <div id="khs" class="tab-content">
 
     <h2 class="text-xl font-bold mb-3">KHS (Kartu Hasil Studi)</h2>
@@ -49,7 +47,6 @@
     </p>
 </div>
 
-<!-- ====================== TAB TRANSKRIP ====================== -->
 <div id="transkrip" class="tab-content hidden">
 
     <h2 class="text-xl font-bold mb-3">Transkrip Sementara</h2>
@@ -89,7 +86,6 @@
     </p>
 </div>
 
-<!-- ====================== TAB JADWAL ====================== -->
 <div id="jadwal" class="tab-content hidden">
 
     <h2 class="text-xl font-bold mb-3">Jadwal Kuliah</h2>
@@ -125,7 +121,6 @@
     </table>
 </div>
 
-<!-- ====================== TAB PRESENSI ====================== -->
 <div id="presensi" class="tab-content hidden">
 
     <h2 class="text-xl font-bold mb-3">Presensi</h2>

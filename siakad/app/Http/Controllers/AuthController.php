@@ -13,7 +13,6 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
-        // Redirect jika sudah login
         if (Auth::guard('mahasiswa')->check()) {
             return redirect('/mahasiswa');
         }
@@ -37,7 +36,6 @@ class AuthController extends Controller
         $username = $request->username;
         $password = $request->password;
 
-        // 1. Cek apakah username adalah NIDN (Dosen) - 10 digit
         if (is_numeric($username) && strlen($username) == 10) {
             $dosen = Dosen::where('nidn', $username)->first();
             
@@ -47,18 +45,15 @@ class AuthController extends Controller
             }
         }
 
-        // 2. Cek apakah username adalah NIM (Mahasiswa) - 12 digit
         if (is_numeric($username) && strlen($username) == 12) {
             $mahasiswa = Mahasiswa::where('nim', $username)->first();
-            
-            // Mahasiswa menggunakan NIM sebagai password default
+
             if ($mahasiswa && $password == $username) {
                 Auth::guard('mahasiswa')->login($mahasiswa);
                 return redirect()->intended('/mahasiswa');
             }
         }
 
-        // 3. Cek login Admin (username biasa)
         if (!is_numeric($username)) {
             $admin = Admin::where('username', $username)->first();
             
@@ -68,7 +63,6 @@ class AuthController extends Controller
             }
         }
 
-        // Login gagal
         return back()->withErrors([
             'username' => 'Username atau password salah.',
         ])->onlyInput('username');
@@ -76,7 +70,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Logout dari guard yang aktif
         if (Auth::guard('dosen')->check()) {
             Auth::guard('dosen')->logout();
         } elseif (Auth::guard('mahasiswa')->check()) {

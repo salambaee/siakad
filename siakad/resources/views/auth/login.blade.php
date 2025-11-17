@@ -30,7 +30,6 @@
             </div>
         @endif
 
-        {{-- ✅ FIXED: Form dengan action dan method yang benar --}}
         <form action="{{ route('login') }}" method="POST">
             @csrf
 

@@ -45,7 +45,6 @@ class MahasiswaSeeder extends Seeder
             [ 'nim' => 362458302147, 'nama' => 'Achmad Alfarizy Satriya G', 'id_prodi' => 1, 'angkatan' => '2024' ],
         ];
 
-        // DIPERBAIKI: Tambahkan timestamps saat insert
         foreach ($mahasiswaData as $mhs) {
             DB::table('mahasiswa')->insert([
                 'nim' => $mhs['nim'],

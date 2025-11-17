@@ -13,7 +13,7 @@ class Dosen extends Authenticatable
     protected $primaryKey = 'nidn';
     public $incrementing = false;
     protected $keyType = 'integer';
-    public $timestamps = true; // DIPERBAIKI: Sesuai dengan migration
+    public $timestamps = true; 
 
     protected $fillable = [
         'nidn',
@@ -38,7 +38,6 @@ class Dosen extends Authenticatable
         return $this->hasMany(Jadwal::class, 'nidn', 'nidn');
     }
 
-    // Method untuk authentication
     public function getAuthIdentifierName()
     {
         return 'nidn';

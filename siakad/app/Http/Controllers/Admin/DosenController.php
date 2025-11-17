@@ -24,7 +24,6 @@ class DosenController extends Controller
 
     public function store(Request $request)
     {
-        // DIPERBAIKI: Validasi NIDN harus 10 digit
         $validated = $request->validate([
             'nidn' => 'required|numeric|digits:10|unique:dosen,nidn',
             'nama' => 'required|string|max:100',
@@ -40,7 +39,6 @@ class DosenController extends Controller
             'id_prodi' => $validated['id_prodi'] ?? null,
             'keahlian' => $validated['keahlian'] ?? null,
             'peran' => $validated['peran'] ?? 'Dosen',
-            // DIPERBAIKI: Password default = NIDN jika tidak diisi
             'password' => isset($validated['password']) && !empty($validated['password'])
                 ? Hash::make($validated['password'])
                 : Hash::make($validated['nidn']),
@@ -49,7 +47,6 @@ class DosenController extends Controller
         return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil ditambahkan.');
     }
 
-    // DIPERBAIKI: Gunakan parameter NIDN manual
     public function edit($nidn)
     {
         $dosen = Dosen::findOrFail($nidn);
@@ -57,7 +54,6 @@ class DosenController extends Controller
         return view('admin.dosen.edit', compact('dosen', 'prodi'));
     }
 
-    // DIPERBAIKI: Gunakan parameter NIDN manual
     public function update(Request $request, $nidn)
     {
         $dosen = Dosen::findOrFail($nidn);
@@ -75,7 +71,6 @@ class DosenController extends Controller
             'id_prodi' => $validated['id_prodi'] ?? null,
             'keahlian' => $validated['keahlian'] ?? null,
             'peran' => $validated['peran'] ?? $dosen->peran,
-            // DIPERBAIKI: Hanya update password jika diisi
             'password' => isset($validated['password']) && !empty($validated['password'])
                 ? Hash::make($validated['password'])
                 : $dosen->password,
@@ -84,7 +79,6 @@ class DosenController extends Controller
         return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil diupdate.');
     }
 
-    // DIPERBAIKI: Gunakan parameter NIDN manual
     public function destroy($nidn)
     {
         $dosen = Dosen::findOrFail($nidn);

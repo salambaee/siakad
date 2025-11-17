@@ -49,7 +49,6 @@ class MahasiswaController extends Controller
             })
             ->get();
 
-        // DIPERBAIKI: Gunakan toArray() untuk konsistensi
         $krsDiambil = Krs::where('nim', $nim)
                         ->pluck('id_jadwal')
                         ->toArray();
@@ -60,8 +59,6 @@ class MahasiswaController extends Controller
     public function storeKrs(Request $request)
     {
         $nim = $this->getNim();
-
-        // DIPERBAIKI: Tambahkan validasi untuk semester dan tahun ajaran
         $request->validate([
             'id_jadwal' => 'required|array',
             'id_jadwal.*' => 'exists:jadwal,id_jadwal',
@@ -72,13 +69,11 @@ class MahasiswaController extends Controller
         $semester = $request->semester ?? 'Ganjil';
         $tahunAjaran = $request->tahun_ajaran ?? '2024/2025';
 
-        // Hapus KRS lama untuk semester ini
         Krs::where('nim', $nim)
             ->where('semester', $semester)
             ->where('tahun_ajaran', $tahunAjaran)
             ->delete();
 
-        // Insert KRS baru
         foreach ($request->id_jadwal as $jadwalId) {
             Krs::create([
                 'nim' => $nim,
@@ -127,12 +122,10 @@ class MahasiswaController extends Controller
                     ->where('nim', $nim)
                     ->get();
 
-        // Hitung IPK
         $totalSks = 0;
         $totalBobot = 0;
 
         foreach ($krs as $item) {
-            // DIPERBAIKI: Cek nilai null dengan lebih teliti
             if ($item->nilai && $item->nilai->nilai_angka !== null) {
                 $sks = $item->jadwal->matkul->sks ?? 0;
                 $totalSks += $sks;

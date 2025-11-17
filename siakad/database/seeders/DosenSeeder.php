@@ -59,14 +59,13 @@ class DosenSeeder extends Seeder
             ['nidn' => 1011018043, 'nama' => 'Dr. Imam Mashuri, M. Pd', 'id_prodi' => 1, 'keahlian' => 'Pendidikan', 'peran' => 'Dosen'],
         ];
 
-        // DIPERBAIKI: Hash password saat insert dengan timestamps
         foreach ($dosenData as $dosen) {
             DB::table('dosen')->insert([
                 'nidn' => $dosen['nidn'],
                 'nama' => $dosen['nama'],
                 'id_prodi' => $dosen['id_prodi'],
                 'keahlian' => $dosen['keahlian'],
-                'password' => Hash::make((string)$dosen['nidn']), // Password = NIDN
+                'password' => Hash::make((string)$dosen['nidn']),
                 'peran' => $dosen['peran'],
                 'created_at' => now(),
                 'updated_at' => now(),
