@@ -2,24 +2,44 @@
 
 namespace App\Models;
 
-// app/Models/Mahasiswa.php
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Mahasiswa extends Model
+class Mahasiswa extends Authenticatable
 {
-    use HasFactory;
+    use Notifiable;
 
     protected $table = 'mahasiswa';
     protected $primaryKey = 'nim';
     public $incrementing = false;
-    protected $keyType = 'bigint';
+    protected $keyType = 'integer';
+    public $timestamps = true;
 
-    protected $fillable = ['nim', 'nama', 'id_prodi', 'angkatan'];
+    protected $fillable = [
+        'nim',
+        'nama',
+        'id_prodi',
+        'angkatan',
+        'password',
+    ];
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'nim';
+    }
 
     public function prodi()
     {
         return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function krs()
+    {
+        return $this->hasMany(Krs::class, 'nim', 'nim');
     }
 }

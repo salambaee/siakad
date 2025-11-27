@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama', 100);
             $table->foreignId('id_prodi')->constrained('prodi', 'id_prodi')->onDelete('no action')->onUpdate('no action');
             $table->string('angkatan', 4);
+            $table->string('password');
             $table->timestamps();
         });
     }
