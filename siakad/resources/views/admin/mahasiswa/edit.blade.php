@@ -3,14 +3,13 @@
 @section('content')
 <h1 class="text-xl font-bold mb-4">Edit Mahasiswa</h1>
 
-<form action="{{ route('mahasiswa.update', $mahasiswa->nim) }}" method="POST" class="bg-white shadow p-4 rounded">
+<form action="{{ route('admin.mahasiswa.update', $mahasiswa->nim) }}" method="POST" class="bg-white shadow p-4 rounded">
     @csrf
     @method('PUT')
 
     <div class="mb-4">
         <label>NIM</label>
         <input type="text" name="nim" class="border p-2 w-full" value="{{ $mahasiswa->nim }}" readonly>
-        {{-- NIM sebaiknya readonly karena primary key --}}
     </div>
 
     <div class="mb-4">
@@ -23,7 +22,7 @@
         <select name="id_prodi" class="border p-2 w-full" required>
             <option value="">-- Pilih Prodi --</option>
             @foreach($prodi as $p)
-                <option value="{{ $p->id_prodi }}" 
+                <option value="{{ $p->id_prodi }}"
                     {{ $mahasiswa->id_prodi == $p->id_prodi ? 'selected' : '' }}>
                     {{ $p->nama_prodi }}
                 </option>

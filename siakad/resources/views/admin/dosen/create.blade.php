@@ -3,7 +3,7 @@
 @section('content')
 <h1 class="text-xl font-bold mb-4">Tambah Dosen</h1>
 
-<form action="{{ route('dosen.store') }}" method="POST" class="bg-white p-4 shadow rounded">
+<form action="{{ route('admin.dosen.store') }}" method="POST" class="bg-white p-4 shadow rounded">
     @csrf
 
     <label>NIDN</label>

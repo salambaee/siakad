@@ -3,7 +3,7 @@
 @section('content')
 <h1 class="text-xl font-bold mb-4">Data Mahasiswa</h1>
 
-<a href="{{ route('mahasiswa.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">
+<a href="{{ route('admin.mahasiswa.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">
     Tambah
 </a>
 
@@ -24,17 +24,14 @@
             <td>{{ $m->nama }}</td>
             <td>{{ $m->prodi->nama_prodi ?? '-' }}</td>
             <td class="flex gap-2">
-
-                <a href="{{ route('mahasiswa.edit', $m->nim) }}" class="text-blue-600">
+                <a href="{{ route('admin.mahasiswa.edit', $m->nim) }}" class="text-blue-600">
                    Edit
                 </a>
-
-                <form action="{{ route('mahasiswa.destroy', $m->nim) }}" method="POST" class="inline">
+                <form action="{{ route('admin.mahasiswa.destroy', $m->nim) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
                     <button class="text-red-600">Delete</button>
                 </form>
-
             </td>
         </tr>
         @endforeach
