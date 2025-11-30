@@ -3,7 +3,7 @@
 @section('content')
 <h1 class="text-xl font-bold mb-4">Tambah Mahasiswa</h1>
 
-<form action="{{ route('mahasiswa.store') }}" method="POST" class="bg-white shadow p-4 rounded">
+<form action="{{ route('admin.mahasiswa.store') }}" method="POST" class="bg-white shadow p-4 rounded">
     @csrf
 
     <div class="mb-4">
