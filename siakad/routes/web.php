@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\AdminMahasiswaManagementController;
 use App\Http\Controllers\Admin\AdminDosenManagementController;
 use App\Http\Controllers\Admin\AdminMataKuliahManagementController;
 use App\Http\Controllers\Admin\AdminJadwalManagementController;
-use App\Http\Controllers\Admin\AdminPresensiManagementController; // Controller Baru
+use App\Http\Controllers\Admin\AdminPresensiManagementController;
 
 Route::get('/', function () { return redirect()->route('login'); });
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -40,7 +40,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('dosen', AdminDosenManagementController::class)->parameters(['dosen' => 'nidn']);
     Route::resource('kelas', AdminJadwalManagementController::class);
 
-    // Route Manajemen Presensi (Yang sebelumnya hilang)
     Route::controller(AdminPresensiManagementController::class)->prefix('presensi')->name('presensi.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}/input', 'input')->name('input');
@@ -56,4 +55,4 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::put('/{kode_mk}', 'update')->name('update');
         Route::delete('/{kode_mk}', 'destroy')->name('destroy');
     });
-});
+}); 
