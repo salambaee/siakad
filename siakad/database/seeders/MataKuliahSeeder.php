@@ -7,9 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 class MataKuliahSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         DB::table('mata_kuliah')->insert([

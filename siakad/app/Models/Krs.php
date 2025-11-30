@@ -27,9 +27,4 @@ class Krs extends Model
     {
         return $this->belongsTo(Jadwal::class, 'id_jadwal', 'id_jadwal');
     }
-
-    public function nilai()
-    {
-        return $this->hasOne(Nilai::class, 'id_krs', 'id_krs');
-    }
 }

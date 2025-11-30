@@ -33,7 +33,6 @@
         <form action="{{ route('login') }}" method="POST">
             @csrf
 
-            <!-- Username -->
             <label class="block mb-2 text-gray-700 font-semibold">Username</label>
             <div class="relative mb-4">
                 <span class="absolute left-3 top-2.5 text-gray-500">
@@ -46,7 +45,6 @@
                        placeholder="NIM / NIDN / Username" required>
             </div>
 
-            <!-- Password -->
             <label class="block mb-2 text-gray-700 font-semibold">Password</label>
             <div class="relative mb-6">
                 <span class="absolute left-3 top-2.5 text-gray-500">
@@ -55,12 +53,10 @@
                     </svg>
                 </span>
 
-                <!-- INPUT PASSWORD -->
                 <input id="passwordInput" type="password" name="password"
                        class="w-full border p-2 pl-10 pr-10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
                        placeholder="Masukkan password" required>
 
-                <!-- ICON MATA -->
                 <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePassword()">
                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5S21.75 12 21.75 12s-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
@@ -69,7 +65,6 @@
                 </span>
             </div>
 
-            <!-- Button -->
             <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold tracking-wide shadow-md">
                 Login
             </button>
@@ -81,8 +76,6 @@
         </p>
     </div>
 
-
-    <!-- SCRIPT SHOW/HIDE PASSWORD -->
     <script>
         function togglePassword() {
             const pw = document.getElementById('passwordInput');

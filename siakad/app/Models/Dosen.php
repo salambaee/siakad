@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 class Dosen extends Authenticatable
 {
     use Notifiable;
-    
+
     protected $table = 'dosen';
     protected $primaryKey = 'nidn';
     public $incrementing = false;
@@ -28,6 +28,21 @@ class Dosen extends Authenticatable
         'password',
     ];
 
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'nidn';
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'nidn';
+    }
+
     public function prodi()
     {
         return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
@@ -38,18 +53,8 @@ class Dosen extends Authenticatable
         return $this->hasMany(Jadwal::class, 'nidn', 'nidn');
     }
 
-    public function getAuthIdentifierName()
+    public function kelas()
     {
-        return 'nidn';
-    }
-
-    public function getAuthPassword()
-    {
-        return $this->password;
-    }
-
-    public function getRouteKeyName()
-    {
-        return 'nidn';
+        return $this->hasMany(Kelas::class, 'nidn', 'nidn');
     }
 }

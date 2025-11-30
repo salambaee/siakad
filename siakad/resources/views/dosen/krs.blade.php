@@ -26,25 +26,23 @@
                     <td class="p-3">{{ $item->jadwal->matkul->nama_mk ?? '-' }}</td>
                     <td class="p-3">{{ $item->semester }}</td>
                     <td class="p-3">
-                        <span class="px-2 py-1 rounded text-xs 
-                            {{ $item->status == 'Disetujui' ? 'bg-green-100 text-green-800' : 
+                        <span class="px-2 py-1 rounded text-xs
+                            {{ $item->status == 'Disetujui' ? 'bg-green-100 text-green-800' :
                                ($item->status == 'Ditolak' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                             {{ $item->status }}
                         </span>
                     </td>
                     <td class="p-3">
                         @if($item->status == 'Pending')
-                        <form action="#" method="POST" class="inline">
+                        <form action="{{ route('dosen.krs.approve', $item->id) }}" method="POST" class="inline">
                             @csrf
-                            <button type="submit" name="action" value="approve" 
-                                class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                            <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                                 Setujui
                             </button>
                         </form>
-                        <form action="#" method="POST" class="inline">
+                        <form action="{{ route('dosen.krs.reject', $item->id) }}" method="POST" class="inline">
                             @csrf
-                            <button type="submit" name="action" value="reject" 
-                                class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
                                 Tolak
                             </button>
                         </form>

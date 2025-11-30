@@ -25,12 +25,19 @@ Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->name('mahasiswa.')->
     Route::get('/informasi', [MahasiswaController::class, 'informasi'])->name('informasi');
 });
 
-Route::middleware(['auth:dosen'])->prefix('dosen')->name('dosen.')->group(function () {
+Route::prefix('dosen')->name('dosen.')->middleware(['auth:dosen'])->group(function () {
     Route::get('/', [DosenController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
     Route::get('/jadwal', [DosenController::class, 'jadwal'])->name('jadwal');
     Route::get('/presensi', [DosenController::class, 'presensi'])->name('presensi');
     Route::get('/nilai', [DosenController::class, 'nilai'])->name('nilai');
     Route::get('/krs', [DosenController::class, 'krs'])->name('krs');
+    
+    Route::post('/krs/approve/{id}', [DosenController::class, 'approveKrs'])->name('krs.approve');
+    Route::post('/krs/reject/{id}', [DosenController::class, 'rejectKrs'])->name('krs.reject');
+    Route::post('/kelas/store', [DosenController::class, 'storeKelas'])->name('kelas.store');
+    Route::post('/nilai/simpan', [DosenController::class, 'simpanNilai'])->name('nilai.simpan');
+    Route::post('/nilai/final', [DosenController::class, 'kirimNilaiFinal'])->name('nilai.final');
 });
 
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -55,4 +62,4 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::put('/{kode_mk}', 'update')->name('update');
         Route::delete('/{kode_mk}', 'destroy')->name('destroy');
     });
-}); 
+});
