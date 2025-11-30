@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dosen;
 use App\Models\Jadwal;
 use App\Models\Krs;
-use App\Models\Nilai;
-use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,54 +12,31 @@ class DosenController extends Controller
 {
     public function dashboard()
     {
-        return view('dosen.dashboard');
+        $dosen = Auth::guard('dosen')->user();
+        return view('dosen.dashboard', compact('dosen'));
     }
 
     public function jadwal()
     {
-        $nidn = Auth::user()->nidn;
+        $nidn = Auth::guard('dosen')->user()->nidn;
         $jadwals = Jadwal::with('matkul')
-                        ->where('nidn', $nidn)
-                        ->get();
+                    ->where('nidn', $nidn)
+                    ->get();
+        
         return view('dosen.jadwal', compact('jadwals'));
     }
 
-    public function krs(Request $request)
+    public function krs()
     {
-        $mahasiswaId = $request->query('mahasiswa_id');
-        $mahasiswaList = Mahasiswa::orderBy('nama', 'asc')->get();
-        $mahasiswaDetail = null;
-        $krsMahasiswa = null;
-
-        if ($mahasiswaId) {
-            $mahasiswaDetail = Mahasiswa::find($mahasiswaId);
-            $krsMahasiswa = Krs::with('jadwal.matkul', 'jadwal.dosen')
-                                ->where('nim', $mahasiswaId)
-                                ->where('status', 'Pending')
-                                ->get();
-        }
-
-        return view('dosen.krs', compact('mahasiswaList', 'mahasiswaDetail', 'krsMahasiswa'));
+        $nidn = Auth::guard('dosen')->user()->nidn;
+        $krs = Krs::with(['jadwal.matkul', 'mahasiswa'])
+                 ->whereHas('jadwal', function($query) use ($nidn) {
+                     $query->where('nidn', $nidn);
+                 })
+                 ->get();
+        
+        return view('dosen.krs', compact('krs'));
     }
-
-    public function updateKrsStatus(Request $request)
-    {
-        $request->validate([
-            'nim' => 'required|numeric|exists:mahasiswa,nim',
-            'status' => 'required|string|in:Disetujui,Ditolak',
-        ]);
-
-        $nim = $request->nim;
-        $status = $request->status;
-
-        Krs::where('nim', $nim)
-            ->where('status', 'Pending')
-            ->update(['status' => $status]);
-
-        return redirect()->route('dosen.krs', ['mahasiswa_id' => $nim])
-                         ->with('success', 'Status KRS berhasil diupdate!');
-    }
-
 
     public function presensi()
     {

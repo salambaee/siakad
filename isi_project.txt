@@ -1,0 +1,1567 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Dosen;
+use App\Models\Mahasiswa;
+use App\Models\Admin;
+
+class AuthController extends Controller
+{
+    public function showLogin()
+    {
+        if (Auth::guard('mahasiswa')->check()) {
+            return redirect('/mahasiswa');
+        }
+        if (Auth::guard('dosen')->check()) {
+            return redirect('/dosen');
+        }
+        if (Auth::guard('admin')->check()) {
+            return redirect('/admin');
+        }
+
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required',
+        ]);
+
+        $username = $request->username;
+        $password = $request->password;
+
+        // Cek sebagai Dosen (NIDN 10 digit)
+        if (is_numeric($username) && strlen($username) == 10) {
+            $dosen = Dosen::where('nidn', $username)->first();
+            if ($dosen && Hash::check($password, $dosen->password)) {
+                Auth::guard('dosen')->login($dosen);
+                return redirect()->intended('/dosen');
+            }
+        }
+
+        // Cek sebagai Mahasiswa (NIM 12 digit)
+        if (is_numeric($username) && strlen($username) == 12) {
+            $mahasiswa = Mahasiswa::where('nim', $username)->first();
+            if ($mahasiswa && Hash::check($password, $mahasiswa->password)) {
+                Auth::guard('mahasiswa')->login($mahasiswa);
+                return redirect()->intended('/mahasiswa');
+            }
+        }
+
+        // Cek sebagai Admin (bukan numeric)
+        $admin = Admin::where('username', $username)->first();
+        if ($admin && Hash::check($password, $admin->password)) {
+            Auth::guard('admin')->login($admin);
+            return redirect()->intended('/admin');
+        }
+
+        return back()->withErrors([
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
+    }
+
+    public function logout(Request $request)
+    {
+        if (Auth::guard('dosen')->check()) {
+            Auth::guard('dosen')->logout();
+        } elseif (Auth::guard('mahasiswa')->check()) {
+            Auth::guard('mahasiswa')->logout();
+        } elseif (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login')->with('success', 'Berhasil logout');
+    }
+}<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
+
+class Controller extends BaseController
+{
+    use AuthorizesRequests, ValidatesRequests;
+}<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Dosen;
+use App\Models\Jadwal;
+use App\Models\Krs;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class DosenController extends Controller
+{
+    public function dashboard()
+    {
+        $dosen = Auth::guard('dosen')->user();
+        return view('dosen.dashboard', compact('dosen'));
+    }
+
+    public function jadwal()
+    {
+        $nidn = Auth::guard('dosen')->user()->nidn;
+        $jadwals = Jadwal::with('matkul')
+                    ->where('nidn', $nidn)
+                    ->get();
+        
+        return view('dosen.jadwal', compact('jadwals'));
+    }
+
+    public function krs()
+    {
+        $nidn = Auth::guard('dosen')->user()->nidn;
+        $krs = Krs::with(['jadwal.matkul', 'mahasiswa'])
+                 ->whereHas('jadwal', function($query) use ($nidn) {
+                     $query->where('nidn', $nidn);
+                 })
+                 ->get();
+        
+        return view('dosen.krs', compact('krs'));
+    }
+
+    public function presensi()
+    {
+        return view('dosen.presensi');
+    }
+
+    public function nilai()
+    {
+        return view('dosen.nilai');
+    }
+}<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Mahasiswa;
+use App\Models\Jadwal;
+use App\Models\Krs;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class MahasiswaController extends Controller
+{
+    private function getNim()
+    {
+        if (Auth::guard('mahasiswa')->check()) {
+            return Auth::guard('mahasiswa')->user()->nim;
+        }
+        abort(401, 'Unauthorized');
+    }
+
+    public function dashboard()
+    {
+        $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
+        return view('mahasiswa.dashboard', compact('mahasiswa'));
+    }
+
+    public function krs()
+    {
+        $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
+        $jadwalsTersedia = Jadwal::with('matkul', 'dosen')
+            ->whereHas('matkul', function ($query) use ($mahasiswa) {
+                $query->where('id_prodi', $mahasiswa->id_prodi);
+            })
+            ->get();
+
+        $krsDiambil = Krs::where('nim', $nim)
+                        ->pluck('id_jadwal')
+                        ->toArray();
+
+        return view('mahasiswa.krs', compact('jadwalsTersedia', 'krsDiambil', 'mahasiswa'));
+    }
+
+    public function storeKrs(Request $request)
+    {
+        $nim = $this->getNim();
+        $request->validate([
+            'id_jadwal' => 'required|array',
+            'id_jadwal.*' => 'exists:jadwal,id_jadwal',
+            'semester' => 'nullable|string',
+            'tahun_ajaran' => 'nullable|string',
+        ]);
+
+        $semester = $request->semester ?? 'Ganjil';
+        $tahunAjaran = $request->tahun_ajaran ?? '2024/2025';
+
+        Krs::where('nim', $nim)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->delete();
+
+        foreach ($request->id_jadwal as $jadwalId) {
+            Krs::create([
+                'nim' => $nim,
+                'id_jadwal' => $jadwalId,
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
+                'status' => 'Pending',
+            ]);
+        }
+
+        return redirect()->route('mahasiswa.krs')->with('success', 'KRS berhasil diajukan!');
+    }
+
+    public function jadwal()
+    {
+        $nim = $this->getNim();
+        $jadwals = Krs::with('jadwal.matkul', 'jadwal.dosen')
+                    ->where('nim', $nim)
+                    ->where('status', 'Disetujui')
+                    ->get();
+
+        return view('mahasiswa.jadwal', compact('jadwals'));
+    }
+
+    public function nilai()
+    {
+        $nim = $this->getNim();
+        $khs = Krs::with('jadwal.matkul', 'nilai')
+                    ->where('nim', $nim)
+                    ->get()
+                    ->groupBy('semester');
+
+        return view('mahasiswa.nilai', compact('khs'));
+    }
+
+    public function informasi()
+    {
+        $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
+        $krs = Krs::with('jadwal.matkul', 'nilai')
+                    ->where('nim', $nim)
+                    ->get();
+
+        $totalSks = 0;
+        $totalBobot = 0;
+
+        foreach ($krs as $item) {
+            if ($item->nilai && $item->nilai->nilai_angka !== null) {
+                $sks = $item->jadwal->matkul->sks ?? 0;
+                $totalSks += $sks;
+                $totalBobot += ($sks * $item->nilai->nilai_angka);
+            }
+        }
+
+        $ipk = $totalSks > 0 ? round($totalBobot / $totalSks, 2) : 0.00;
+
+        return view('mahasiswa.informasi', compact('mahasiswa', 'krs', 'ipk', 'totalSks'));
+    }
+}<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Mahasiswa;
+use App\Models\Dosen;
+use App\Models\MataKuliah;
+
+class AdminDashboardController extends Controller
+{
+    public function index()
+    {
+        $totalMahasiswa = Mahasiswa::count();
+        $totalDosen = Dosen::count();
+        $totalMatkul = MataKuliah::count();
+
+        return view('admin.dashboard', compact('totalMahasiswa', 'totalDosen', 'totalMatkul'));
+    }
+}<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Dosen;
+use App\Models\Prodi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AdminDosenManagementController extends Controller
+{
+    public function index()
+    {
+        $dosen = Dosen::with('prodi')->get();
+        return view('admin.dosen.index', compact('dosen'));
+    }
+
+    public function create()
+    {
+        $prodi = Prodi::all();
+        return view('admin.dosen.create', compact('prodi'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nidn' => 'required|numeric|unique:dosen,nidn',
+            'nama' => 'required|string|max:45',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'keahlian' => 'nullable|string|max:45',
+            'peran' => 'nullable|string|max:45',
+        ]);
+
+        Dosen::create([
+            'nidn' => $request->nidn,
+            'nama' => $request->nama,
+            'id_prodi' => $request->id_prodi,
+            'keahlian' => $request->keahlian,
+            'peran' => $request->peran ?? 'Dosen',
+            'password' => Hash::make($request->nidn),
+        ]);
+
+        return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil ditambahkan');
+    }
+
+    public function edit($nidn)
+    {
+        $dosen = Dosen::findOrFail($nidn);
+        $prodi = Prodi::all();
+        return view('admin.dosen.edit', compact('dosen', 'prodi'));
+    }
+
+    public function update(Request $request, $nidn)
+    {
+        $dosen = Dosen::findOrFail($nidn);
+        
+        $request->validate([
+            'nama' => 'required|string|max:45',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'keahlian' => 'nullable|string|max:45',
+            'peran' => 'nullable|string|max:45',
+        ]);
+
+        $data = $request->only(['nama', 'id_prodi', 'keahlian', 'peran']);
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $dosen->update($data);
+
+        return redirect()->route('admin.dosen.index')->with('success', 'Data dosen berhasil diupdate');
+    }
+
+    public function destroy($nidn)
+    {
+        $dosen = Dosen::findOrFail($nidn);
+        $dosen->delete();
+
+        return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil dihapus');
+    }
+}<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Mahasiswa;
+use App\Models\Prodi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AdminMahasiswaManagementController extends Controller
+{
+    public function index()
+    {
+        $mahasiswa = Mahasiswa::with('prodi')->get();
+        return view('admin.mahasiswa.index', compact('mahasiswa'));
+    }
+
+    public function create()
+    {
+        $prodi = Prodi::all();
+        return view('admin.mahasiswa.create', compact('prodi'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nim' => 'required|numeric|unique:mahasiswa,nim',
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'angkatan' => 'required|string|max:4',
+        ]);
+
+        Mahasiswa::create([
+            'nim' => $request->nim,
+            'nama' => $request->nama,
+            'id_prodi' => $request->id_prodi,
+            'angkatan' => $request->angkatan,
+            'password' => Hash::make($request->nim),
+        ]);
+
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan');
+    }
+
+    public function edit($nim)
+    {
+        $mahasiswa = Mahasiswa::findOrFail($nim);
+        $prodi = Prodi::all();
+        return view('admin.mahasiswa.edit', compact('mahasiswa', 'prodi'));
+    }
+
+    public function update(Request $request, $nim)
+    {
+        $mahasiswa = Mahasiswa::findOrFail($nim);
+
+        $request->validate([
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'angkatan' => 'required|string|max:4',
+        ]);
+
+        $mahasiswa->update($request->only(['nama', 'id_prodi', 'angkatan']));
+
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Data mahasiswa berhasil diupdate');
+    }
+
+    public function destroy($nim)
+    {
+        $mahasiswa = Mahasiswa::findOrFail($nim);
+        $mahasiswa->delete();
+
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil dihapus');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Admin extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'admin';
+    protected $primaryKey = 'id_admin';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nama',
+        'username',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    public function getAuthIdentifierName()
+    {
+        return 'username';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Dosen extends Authenticatable
+{
+    use Notifiable;
+    
+    protected $table = 'dosen';
+    protected $primaryKey = 'nidn';
+    public $incrementing = false;
+    protected $keyType = 'integer';
+    public $timestamps = true;
+
+    protected $fillable = [
+        'nidn',
+        'nama',
+        'id_prodi',
+        'keahlian',
+        'password',
+        'peran',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function jadwals()
+    {
+        return $this->hasMany(Jadwal::class, 'nidn', 'nidn');
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'nidn';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'nidn';
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Jadwal extends Model
+{
+    protected $table = 'jadwal';
+    protected $primaryKey = 'id_jadwal';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'kode_mk',
+        'nidn',
+        'hari',
+        'jam',
+        'ruang',
+    ];
+
+    public function matkul()
+    {
+        return $this->belongsTo(MataKuliah::class, 'kode_mk', 'kode_mk');
+    }
+
+    public function dosen()
+    {
+        return $this->belongsTo(Dosen::class, 'nidn', 'nidn');
+    }
+
+    public function krs()
+    {
+        return $this->hasMany(Krs::class, 'id_jadwal', 'id_jadwal');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Krs extends Model
+{
+    protected $table = 'krs';
+    protected $primaryKey = 'id_krs';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nim',
+        'id_jadwal',
+        'semester',
+        'tahun_ajaran',
+        'status',
+    ];
+
+    public function mahasiswa()
+    {
+        return $this->belongsTo(Mahasiswa::class, 'nim', 'nim');
+    }
+
+    public function jadwal()
+    {
+        return $this->belongsTo(Jadwal::class, 'id_jadwal', 'id_jadwal');
+    }
+
+    public function nilai()
+    {
+        return $this->hasOne(Nilai::class, 'id_krs', 'id_krs');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Mahasiswa extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'mahasiswa';
+    protected $primaryKey = 'nim';
+    public $incrementing = false;
+    protected $keyType = 'integer';
+    public $timestamps = true;
+
+    protected $fillable = [
+        'nim',
+        'nama',
+        'id_prodi',
+        'angkatan',
+        'password',
+    ];
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'nim';
+    }
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function krs()
+    {
+        return $this->hasMany(Krs::class, 'nim', 'nim');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MataKuliah extends Model
+{
+    protected $table = 'mata_kuliah';
+    protected $primaryKey = 'kode_mk';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'kode_mk',
+        'id_prodi',
+        'nama_mk',
+        'sks',
+    ];
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function jadwals()
+    {
+        return $this->hasMany(Jadwal::class, 'kode_mk', 'kode_mk');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Nilai extends Model
+{
+    protected $table = 'nilai';
+    protected $primaryKey = 'id_nilai';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'id_krs',
+        'nilai_huruf',
+        'nilai_angka',
+    ];
+
+    public function krs()
+    {
+        return $this->belongsTo(Krs::class, 'id_krs', 'id_krs');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Prodi extends Model
+{
+    protected $table = 'prodi';
+    protected $primaryKey = 'id_prodi';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nama_prodi',
+        'jenjang',
+    ];
+
+    public function mahasiswas()
+    {
+        return $this->hasMany(Mahasiswa::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function dosens()
+    {
+        return $this->hasMany(Dosen::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function mataKuliahs()
+    {
+        return $this->hasMany(MataKuliah::class, 'id_prodi', 'id_prodi');
+    }
+}<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+}
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Dosen;
+use App\Models\Mahasiswa;
+use App\Models\Admin;
+
+class AuthController extends Controller
+{
+    public function showLogin()
+    {
+        if (Auth::guard('mahasiswa')->check()) {
+            return redirect('/mahasiswa');
+        }
+        if (Auth::guard('dosen')->check()) {
+            return redirect('/dosen');
+        }
+        if (Auth::guard('admin')->check()) {
+            return redirect('/admin');
+        }
+
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required',
+        ]);
+
+        $username = $request->username;
+        $password = $request->password;
+
+        // Cek sebagai Dosen (NIDN 10 digit)
+        if (is_numeric($username) && strlen($username) == 10) {
+            $dosen = Dosen::where('nidn', $username)->first();
+            if ($dosen && Hash::check($password, $dosen->password)) {
+                Auth::guard('dosen')->login($dosen);
+                return redirect()->intended('/dosen');
+            }
+        }
+
+        // Cek sebagai Mahasiswa (NIM 12 digit)
+        if (is_numeric($username) && strlen($username) == 12) {
+            $mahasiswa = Mahasiswa::where('nim', $username)->first();
+            if ($mahasiswa && Hash::check($password, $mahasiswa->password)) {
+                Auth::guard('mahasiswa')->login($mahasiswa);
+                return redirect()->intended('/mahasiswa');
+            }
+        }
+
+        // Cek sebagai Admin (bukan numeric)
+        $admin = Admin::where('username', $username)->first();
+        if ($admin && Hash::check($password, $admin->password)) {
+            Auth::guard('admin')->login($admin);
+            return redirect()->intended('/admin');
+        }
+
+        return back()->withErrors([
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
+    }
+
+    public function logout(Request $request)
+    {
+        if (Auth::guard('dosen')->check()) {
+            Auth::guard('dosen')->logout();
+        } elseif (Auth::guard('mahasiswa')->check()) {
+            Auth::guard('mahasiswa')->logout();
+        } elseif (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login')->with('success', 'Berhasil logout');
+    }
+}<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
+
+class Controller extends BaseController
+{
+    use AuthorizesRequests, ValidatesRequests;
+}<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Dosen;
+use App\Models\Jadwal;
+use App\Models\Krs;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class DosenController extends Controller
+{
+    public function dashboard()
+    {
+        $dosen = Auth::guard('dosen')->user();
+        return view('dosen.dashboard', compact('dosen'));
+    }
+
+    public function jadwal()
+    {
+        $nidn = Auth::guard('dosen')->user()->nidn;
+        $jadwals = Jadwal::with('matkul')
+                    ->where('nidn', $nidn)
+                    ->get();
+        
+        return view('dosen.jadwal', compact('jadwals'));
+    }
+
+    public function krs()
+    {
+        $nidn = Auth::guard('dosen')->user()->nidn;
+        $krs = Krs::with(['jadwal.matkul', 'mahasiswa'])
+                 ->whereHas('jadwal', function($query) use ($nidn) {
+                     $query->where('nidn', $nidn);
+                 })
+                 ->get();
+        
+        return view('dosen.krs', compact('krs'));
+    }
+
+    public function presensi()
+    {
+        return view('dosen.presensi');
+    }
+
+    public function nilai()
+    {
+        return view('dosen.nilai');
+    }
+}<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Mahasiswa;
+use App\Models\Jadwal;
+use App\Models\Krs;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class MahasiswaController extends Controller
+{
+    private function getNim()
+    {
+        if (Auth::guard('mahasiswa')->check()) {
+            return Auth::guard('mahasiswa')->user()->nim;
+        }
+        abort(401, 'Unauthorized');
+    }
+
+    public function dashboard()
+    {
+        $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
+        return view('mahasiswa.dashboard', compact('mahasiswa'));
+    }
+
+    public function krs()
+    {
+        $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
+        $jadwalsTersedia = Jadwal::with('matkul', 'dosen')
+            ->whereHas('matkul', function ($query) use ($mahasiswa) {
+                $query->where('id_prodi', $mahasiswa->id_prodi);
+            })
+            ->get();
+
+        $krsDiambil = Krs::where('nim', $nim)
+                        ->pluck('id_jadwal')
+                        ->toArray();
+
+        return view('mahasiswa.krs', compact('jadwalsTersedia', 'krsDiambil', 'mahasiswa'));
+    }
+
+    public function storeKrs(Request $request)
+    {
+        $nim = $this->getNim();
+        $request->validate([
+            'id_jadwal' => 'required|array',
+            'id_jadwal.*' => 'exists:jadwal,id_jadwal',
+            'semester' => 'nullable|string',
+            'tahun_ajaran' => 'nullable|string',
+        ]);
+
+        $semester = $request->semester ?? 'Ganjil';
+        $tahunAjaran = $request->tahun_ajaran ?? '2024/2025';
+
+        Krs::where('nim', $nim)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->delete();
+
+        foreach ($request->id_jadwal as $jadwalId) {
+            Krs::create([
+                'nim' => $nim,
+                'id_jadwal' => $jadwalId,
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
+                'status' => 'Pending',
+            ]);
+        }
+
+        return redirect()->route('mahasiswa.krs')->with('success', 'KRS berhasil diajukan!');
+    }
+
+    public function jadwal()
+    {
+        $nim = $this->getNim();
+        $jadwals = Krs::with('jadwal.matkul', 'jadwal.dosen')
+                    ->where('nim', $nim)
+                    ->where('status', 'Disetujui')
+                    ->get();
+
+        return view('mahasiswa.jadwal', compact('jadwals'));
+    }
+
+    public function nilai()
+    {
+        $nim = $this->getNim();
+        $khs = Krs::with('jadwal.matkul', 'nilai')
+                    ->where('nim', $nim)
+                    ->get()
+                    ->groupBy('semester');
+
+        return view('mahasiswa.nilai', compact('khs'));
+    }
+
+    public function informasi()
+    {
+        $nim = $this->getNim();
+        $mahasiswa = Mahasiswa::with('prodi')->find($nim);
+
+        if (!$mahasiswa) {
+            abort(404, "Mahasiswa dengan NIM $nim tidak ditemukan.");
+        }
+
+        $krs = Krs::with('jadwal.matkul', 'nilai')
+                    ->where('nim', $nim)
+                    ->get();
+
+        $totalSks = 0;
+        $totalBobot = 0;
+
+        foreach ($krs as $item) {
+            if ($item->nilai && $item->nilai->nilai_angka !== null) {
+                $sks = $item->jadwal->matkul->sks ?? 0;
+                $totalSks += $sks;
+                $totalBobot += ($sks * $item->nilai->nilai_angka);
+            }
+        }
+
+        $ipk = $totalSks > 0 ? round($totalBobot / $totalSks, 2) : 0.00;
+
+        return view('mahasiswa.informasi', compact('mahasiswa', 'krs', 'ipk', 'totalSks'));
+    }
+}<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Mahasiswa;
+use App\Models\Dosen;
+use App\Models\MataKuliah;
+
+class AdminDashboardController extends Controller
+{
+    public function index()
+    {
+        $totalMahasiswa = Mahasiswa::count();
+        $totalDosen = Dosen::count();
+        $totalMatkul = MataKuliah::count();
+
+        return view('admin.dashboard', compact('totalMahasiswa', 'totalDosen', 'totalMatkul'));
+    }
+}<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Dosen;
+use App\Models\Prodi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AdminDosenManagementController extends Controller
+{
+    public function index()
+    {
+        $dosen = Dosen::with('prodi')->get();
+        return view('admin.dosen.index', compact('dosen'));
+    }
+
+    public function create()
+    {
+        $prodi = Prodi::all();
+        return view('admin.dosen.create', compact('prodi'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nidn' => 'required|numeric|unique:dosen,nidn',
+            'nama' => 'required|string|max:45',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'keahlian' => 'nullable|string|max:45',
+            'peran' => 'nullable|string|max:45',
+        ]);
+
+        Dosen::create([
+            'nidn' => $request->nidn,
+            'nama' => $request->nama,
+            'id_prodi' => $request->id_prodi,
+            'keahlian' => $request->keahlian,
+            'peran' => $request->peran ?? 'Dosen',
+            'password' => Hash::make($request->nidn),
+        ]);
+
+        return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil ditambahkan');
+    }
+
+    public function edit($nidn)
+    {
+        $dosen = Dosen::findOrFail($nidn);
+        $prodi = Prodi::all();
+        return view('admin.dosen.edit', compact('dosen', 'prodi'));
+    }
+
+    public function update(Request $request, $nidn)
+    {
+        $dosen = Dosen::findOrFail($nidn);
+        
+        $request->validate([
+            'nama' => 'required|string|max:45',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'keahlian' => 'nullable|string|max:45',
+            'peran' => 'nullable|string|max:45',
+        ]);
+
+        $data = $request->only(['nama', 'id_prodi', 'keahlian', 'peran']);
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $dosen->update($data);
+
+        return redirect()->route('admin.dosen.index')->with('success', 'Data dosen berhasil diupdate');
+    }
+
+    public function destroy($nidn)
+    {
+        $dosen = Dosen::findOrFail($nidn);
+        $dosen->delete();
+
+        return redirect()->route('admin.dosen.index')->with('success', 'Dosen berhasil dihapus');
+    }
+}<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Mahasiswa;
+use App\Models\Prodi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AdminMahasiswaManagementController extends Controller
+{
+    public function index()
+    {
+        $mahasiswa = Mahasiswa::with('prodi')->get();
+        return view('admin.mahasiswa.index', compact('mahasiswa'));
+    }
+
+    public function create()
+    {
+        $prodi = Prodi::all();
+        return view('admin.mahasiswa.create', compact('prodi'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nim' => 'required|numeric|unique:mahasiswa,nim',
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'angkatan' => 'required|string|max:4',
+        ]);
+
+        Mahasiswa::create([
+            'nim' => $request->nim,
+            'nama' => $request->nama,
+            'id_prodi' => $request->id_prodi,
+            'angkatan' => $request->angkatan,
+            'password' => Hash::make($request->nim),
+        ]);
+
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan');
+    }
+
+    public function edit($nim)
+    {
+        $mahasiswa = Mahasiswa::findOrFail($nim);
+        $prodi = Prodi::all();
+        return view('admin.mahasiswa.edit', compact('mahasiswa', 'prodi'));
+    }
+
+    public function update(Request $request, $nim)
+    {
+        $mahasiswa = Mahasiswa::findOrFail($nim);
+
+        $request->validate([
+            'nama' => 'required|string|max:100',
+            'id_prodi' => 'required|exists:prodi,id_prodi',
+            'angkatan' => 'required|string|max:4',
+        ]);
+
+        $mahasiswa->update($request->only(['nama', 'id_prodi', 'angkatan']));
+
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Data mahasiswa berhasil diupdate');
+    }
+
+    public function destroy($nim)
+    {
+        $mahasiswa = Mahasiswa::findOrFail($nim);
+        $mahasiswa->delete();
+
+        return redirect()->route('admin.mahasiswa.index')->with('success', 'Mahasiswa berhasil dihapus');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Admin extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'admin';
+    protected $primaryKey = 'id_admin';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nama',
+        'username',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    public function getAuthIdentifierName()
+    {
+        return 'username';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Dosen extends Authenticatable
+{
+    use Notifiable;
+    
+    protected $table = 'dosen';
+    protected $primaryKey = 'nidn';
+    public $incrementing = false;
+    protected $keyType = 'integer';
+    public $timestamps = true;
+
+    protected $fillable = [
+        'nidn',
+        'nama',
+        'id_prodi',
+        'keahlian',
+        'password',
+        'peran',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function jadwals()
+    {
+        return $this->hasMany(Jadwal::class, 'nidn', 'nidn');
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'nidn';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'nidn';
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Jadwal extends Model
+{
+    protected $table = 'jadwal';
+    protected $primaryKey = 'id_jadwal';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'kode_mk',
+        'nidn',
+        'hari',
+        'jam',
+        'ruang',
+    ];
+
+    public function matkul()
+    {
+        return $this->belongsTo(MataKuliah::class, 'kode_mk', 'kode_mk');
+    }
+
+    public function dosen()
+    {
+        return $this->belongsTo(Dosen::class, 'nidn', 'nidn');
+    }
+
+    public function krs()
+    {
+        return $this->hasMany(Krs::class, 'id_jadwal', 'id_jadwal');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Krs extends Model
+{
+    protected $table = 'krs';
+    protected $primaryKey = 'id_krs';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nim',
+        'id_jadwal',
+        'semester',
+        'tahun_ajaran',
+        'status',
+    ];
+
+    public function mahasiswa()
+    {
+        return $this->belongsTo(Mahasiswa::class, 'nim', 'nim');
+    }
+
+    public function jadwal()
+    {
+        return $this->belongsTo(Jadwal::class, 'id_jadwal', 'id_jadwal');
+    }
+
+    public function nilai()
+    {
+        return $this->hasOne(Nilai::class, 'id_krs', 'id_krs');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Mahasiswa extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'mahasiswa';
+    protected $primaryKey = 'nim';
+    public $incrementing = false;
+    protected $keyType = 'integer';
+    public $timestamps = true;
+
+    protected $fillable = [
+        'nim',
+        'nama',
+        'id_prodi',
+        'angkatan',
+        'password',
+    ];
+
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'nim';
+    }
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function krs()
+    {
+        return $this->hasMany(Krs::class, 'nim', 'nim');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MataKuliah extends Model
+{
+    protected $table = 'mata_kuliah';
+    protected $primaryKey = 'kode_mk';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'kode_mk',
+        'id_prodi',
+        'nama_mk',
+        'sks',
+    ];
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function jadwals()
+    {
+        return $this->hasMany(Jadwal::class, 'kode_mk', 'kode_mk');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Nilai extends Model
+{
+    protected $table = 'nilai';
+    protected $primaryKey = 'id_nilai';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'id_krs',
+        'nilai_huruf',
+        'nilai_angka',
+    ];
+
+    public function krs()
+    {
+        return $this->belongsTo(Krs::class, 'id_krs', 'id_krs');
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Prodi extends Model
+{
+    protected $table = 'prodi';
+    protected $primaryKey = 'id_prodi';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nama_prodi',
+        'jenjang',
+    ];
+
+    public function mahasiswas()
+    {
+        return $this->hasMany(Mahasiswa::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function dosens()
+    {
+        return $this->hasMany(Dosen::class, 'id_prodi', 'id_prodi');
+    }
+
+    public function mataKuliahs()
+    {
+        return $this->hasMany(MataKuliah::class, 'id_prodi', 'id_prodi');
+    }
+}<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+}
+==== %%f ==== 
+==== %%f ==== 
+==== %%f ==== 

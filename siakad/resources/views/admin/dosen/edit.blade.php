@@ -3,7 +3,7 @@
 @section('content')
 <h1 class="text-xl font-bold mb-4">Edit Dosen</h1>
 
-<form action="{{ url('/admin/dosen/'.$dosen->nidn) }}" method="POST" class="bg-white p-4 shadow rounded">
+<form action="{{ route('admin.dosen.update', $dosen->nidn) }}" method="POST" class="bg-white p-4 shadow rounded">
     @csrf
     @method('PUT')
 
