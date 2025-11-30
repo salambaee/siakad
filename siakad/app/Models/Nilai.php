@@ -2,22 +2,34 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Nilai extends Model
 {
+    use HasFactory;
+
     protected $table = 'nilai';
-    protected $primaryKey = 'id_nilai';
-    public $timestamps = false;
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'id_krs',
+        'nim',
+        'kode_mk',
+        'nilai_tugas',
+        'nilai_uts',
+        'nilai_uas',
+        'nilai_akhir',
         'nilai_huruf',
-        'nilai_angka',
+        'is_final',
     ];
 
-    public function krs()
+    public function mahasiswa()
     {
-        return $this->belongsTo(Krs::class, 'id_krs', 'id_krs');
+        return $this->belongsTo(Mahasiswa::class, 'nim', 'nim');
+    }
+
+    public function mataKuliah()
+    {
+        return $this->belongsTo(MataKuliah::class, 'kode_mk', 'kode_mk');
     }
 }

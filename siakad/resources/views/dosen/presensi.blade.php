@@ -7,63 +7,67 @@
 <div class="bg-white shadow rounded-xl p-6 border border-gray-200 mb-8">
     <h2 class="text-xl font-semibold text-gray-700 mb-4">Tambah Kelas Mengajar</h2>
 
-    <form class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+    <form action="{{ route('dosen.kelas.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @csrf
+
         {{-- Mata Kuliah --}}
         <div>
             <label class="text-sm font-medium text-gray-600">Mata Kuliah</label>
-            <select class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
-                <option>Pilih Mata Kuliah</option>
-                <option>Pemrograman Web</option>
-                <option>Struktur Data</option>
-                <option>Basis Data</option>
+            <select name="kode_mk" class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
+                <option value="">Pilih Mata Kuliah</option>
+                @foreach($mataKuliah as $mk)
+                    <option value="{{ $mk->kode_mk }}">{{ $mk->nama_mk }}</option>
+                @endforeach
             </select>
         </div>
 
         {{-- Kelas --}}
         <div>
             <label class="text-sm font-medium text-gray-600">Kelas</label>
-            <select class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
-                <option>Pilih Kelas</option>
-                <option>TI-3A</option>
-                <option>TI-3B</option>
-                <option>TI-3C</option>
-            </select>
+            <input type="text" name="kelas" placeholder="Contoh: TI-3A"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
         </div>
 
         {{-- Hari --}}
         <div>
             <label class="text-sm font-medium text-gray-600">Hari</label>
-            <select class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
-                <option>Pilih Hari</option>
-                <option>Senin</option>
-                <option>Selasa</option>
-                <option>Rabu</option>
-                <option>Kamis</option>
-                <option>Jumat</option>
+            <select name="hari" class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
+                <option value="">Pilih Hari</option>
+                <option value="Senin">Senin</option>
+                <option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option>
+                <option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option>
             </select>
         </div>
 
-        {{-- Jam --}}
+        {{-- Jam Mulai --}}
         <div>
-            <label class="text-sm font-medium text-gray-600">Jam</label>
-            <input type="text"
-                   placeholder="Contoh: 09:00 - 11:00"
+            <label class="text-sm font-medium text-gray-600">Jam Mulai</label>
+            <input type="time" name="jam_mulai"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
+        </div>
+
+        {{-- Jam Selesai --}}
+        <div>
+            <label class="text-sm font-medium text-gray-600">Jam Selesai</label>
+            <input type="time" name="jam_selesai"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
         </div>
 
         {{-- Ruang --}}
         <div>
             <label class="text-sm font-medium text-gray-600">Ruang</label>
-            <input type="text"
-                   placeholder="Contoh: B205"
+            <input type="text" name="ruang" placeholder="Contoh: B205"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1">
         </div>
-    </form>
 
-    <button class="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-        Tambah Kelas
-    </button>
+        <div class="md:col-span-2">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+                Tambah Kelas
+            </button>
+        </div>
+    </form>
 </div>
 
 {{-- Daftar Kelas --}}
@@ -82,27 +86,18 @@
             </tr>
         </thead>
         <tbody class="divide-y">
+            @foreach($kelas as $kelasItem)
             <tr>
-                <td class="py-3 font-medium">Pemrograman Web</td>
-                <td class="py-3">TI-3A</td>
-                <td class="py-3">Senin</td>
-                <td class="py-3">09:00 - 11:00</td>
-                <td class="py-3">B205</td>
+                <td class="py-3 font-medium">{{ $kelasItem->mataKuliah->nama_mk ?? '-' }}</td>
+                <td class="py-3">{{ $kelasItem->kelas }}</td>
+                <td class="py-3">{{ $kelasItem->hari }}</td>
+                <td class="py-3">{{ $kelasItem->jam_mulai }} - {{ $kelasItem->jam_selesai }}</td>
+                <td class="py-3">{{ $kelasItem->ruang }}</td>
                 <td class="py-3">
                     <a href="#" class="text-blue-600 hover:underline">Presensi</a>
                 </td>
             </tr>
-
-            <tr>
-                <td class="py-3 font-medium">Struktur Data</td>
-                <td class="py-3">TI-3B</td>
-                <td class="py-3">Kamis</td>
-                <td class="py-3">13:00 - 15:00</td>
-                <td class="py-3">A102</td>
-                <td class="py-3">
-                    <a href="#" class="text-blue-600 hover:underline">Presensi</a>
-                </td>
-            </tr>
+            @endforeach
         </tbody>
     </table>
 </div>

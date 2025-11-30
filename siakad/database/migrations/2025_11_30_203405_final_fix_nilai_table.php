@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('nilai');
+        
         Schema::create('nilai', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('nim');
@@ -20,8 +22,9 @@ return new class extends Migration
             $table->boolean('is_final')->default(false);
             $table->timestamps();
 
-            $table->foreign('nim')->references('nim')->on('mahasiswa')->onDelete('cascade');
-            $table->foreign('kode_mk')->references('kode_mk')->on('mata_kuliah')->onDelete('cascade');
+            // Foreign keys - tanpa constraint dulu untuk testing
+            // $table->foreign('nim')->references('nim')->on('mahasiswa');
+            // $table->foreign('kode_mk')->references('kode_mk')->on('mata_kuliah');
         });
     }
 

@@ -23,6 +23,10 @@ class Mahasiswa extends Authenticatable
         'password',
     ];
 
+    protected $hidden = [
+        'password',
+    ];
+
     public function getAuthPassword()
     {
         return $this->password;
@@ -41,5 +45,10 @@ class Mahasiswa extends Authenticatable
     public function krs()
     {
         return $this->hasMany(Krs::class, 'nim', 'nim');
+    }
+
+    public function nilai()
+    {
+        return $this->hasMany(Nilai::class, 'nim', 'nim');
     }
 }

@@ -28,4 +28,14 @@ class MataKuliah extends Model
     {
         return $this->hasMany(Jadwal::class, 'kode_mk', 'kode_mk');
     }
+
+    public function kelas()
+    {
+        return $this->hasMany(Kelas::class, 'kode_mk', 'kode_mk');
+    }
+
+    public function nilai()
+    {
+        return $this->hasMany(Nilai::class, 'kode_mk', 'kode_mk');
+    }
 }
